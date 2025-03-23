@@ -1,0 +1,49 @@
+// in this  project im using esbuild to compile entire code instead of using typescript compiler as when we use type as module in package.json and in tsconfig we target to ES6 or any new version to get get ES modules in build, Node.js requires explicit file extensions (.js) in all the ES Module imports (when importing something to a file it must add .js to the end  ex=> import a from "test/vest/amit.js").
+
+// but , TypeScript doesn't add these extensions during compilation, leading to runtime errors. There are several ways to add these extensions for example there is a typescript plugin by the name of zero-plus , this can automatically add .js in all imports. Another way is to manually add .js in all imports which is stupid. now another jugaad is to write a script that can update all the import extensions after build is formed.
+
+// these were all the ways but a much advance way is to use a different bundler to bundle your files so that it can automatically add .js extesion to all the imports.
+
+// This is what i'll do.
+
+
+// now if u are thinking of using type module in package.json and in tsconfig to add target as commonjs to fix the problem of extension , it will not work as package.json needs type module (means it needs ES modules which is not commonjs) so it wil conflict with build as it will contain commonjs syntax. and if u remove type module from package.json it will not allow to use import export syntax, so it is not possibe.
+
+// Why TypeScript Doesn't Add .js Extensions Automatically
+
+// TypeScript treats file extensions as a runtime detail. Since it’s a compile-time tool, it doesn't alter import paths beyond resolving them correctly. Adding .js to imports in TypeScript would violate its design philosophy of being agnostic about runtime behaviors.
+
+
+
+
+
+
+
+
+
+// running migrations (working )
+
+// first run npm run build
+
+//  when build is ready run this command 
+
+// npx typeorm migration:generate migration_ka_naam -d ./dist/dataSource/dataSource.js 
+
+// this will create a migration file with .ts extension inside src folder. move that file inside migrations folder inside the src folder.
+// again run npm run build
+
+// then to apply the migration, run following command
+
+// npx typeorm migration:run -d ./dist/dataSource/dataSource.js
+
+
+
+// circular dependency issue fix
+
+// https://github.com/typeorm/typeorm/issues/4526#issuecomment-1076462998
+
+
+
+// repository ka use POST, PUT aur delete ke lie kro
+
+//  get ke lie hamesha raw sql likho.

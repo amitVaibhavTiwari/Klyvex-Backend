@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    // "skipLibCheck": true,
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "moduleResolution": "NodeNext",
+    "sourceMap": true,
+    "isolatedModules": true,
+    // for typeORM
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    // this is done to work with entities in typeORM without error.
+    "strictPropertyInitialization": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
