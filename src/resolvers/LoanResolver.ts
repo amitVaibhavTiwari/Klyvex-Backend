@@ -17,7 +17,7 @@ import { validate } from "class-validator";
 import { Loans } from "../entities/Loans.js";
 
 // response types
-@ObjectType()
+@ObjectType() // this objectType decorator helps in type-graphQl to recognize that this is a type and it will be used in the schema
 export class loanResponse {
   @Field(() => Loans, { nullable: true })
   loan?: Loans;
@@ -39,7 +39,6 @@ class getSingleLoanResponse {
 // resolvers
 @Resolver(Loans)
 export class loanResolver {
-
   @Query(() => getSingleLoanResponse, { nullable: true })
   async getSingleLoan(
     @Arg("id", () => String) id: string

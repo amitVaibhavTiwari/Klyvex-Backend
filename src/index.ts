@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import cors from "cors";
 import express from "express";
+import cookieParser from "cookie-parser";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { buildSchema } from "type-graphql";
@@ -21,12 +22,14 @@ const startGraphQlServer = async () => {
 
     const server = new ApolloServer({
       schema,
-      introspection: true,
+      introspection: process.env.NODE_ENV === "production" ? false : true,
     });
 
     await server.start();
 
     const app = express();
+    app.use(cookieParser());
+
     app.use(
       cors({
         origin: function (origin, callback) {
@@ -38,23 +41,23 @@ const startGraphQlServer = async () => {
       })
     );
 
-    // Applying Apollo middleware to Express
     app.use(
       "/graphql",
       express.json(),
       expressMiddleware(server, {
-        context: async ({ req }) => ({
-          // Add any custom context here (e.g., user auth)
+        context: async ({ req, res }) => ({
+          req,
+          res,
           dataSource: AppDataSource,
         }),
       })
     );
 
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}/graphql`);
+      console.log(`Server running at: http://localhost:${PORT}/graphql`);
     });
   } catch (error) {
-    console.error("Error starting the server: ", error);
+    console.error("Error starting the server:", error);
   }
 };
 

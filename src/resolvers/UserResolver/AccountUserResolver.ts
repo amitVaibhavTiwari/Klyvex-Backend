@@ -1,4 +1,5 @@
-import { Resolver, Query, Mutation, Arg } from "type-graphql";
+import { Resolver, Query, Mutation, Arg, Ctx } from "type-graphql";
+import { Response } from "express";
 import {
   userEmailRepository,
   accountUserRepository,
@@ -9,8 +10,16 @@ import { hashPassword } from "../../utils/password.js";
 import { generateOTP } from "../../utils/OTP.js";
 import { sendRegistrationOtpEmail } from "../../utils/email.js";
 import { validate } from "class-validator";
-import { GetUserDetailsResponse, UserRegisterResponse } from "./types.js";
+import {
+  GetUserDetailsResponse,
+  UserRegisterResponse,
+  VerifyEmailRegisterOtpResponse,
+} from "./types.js";
 import { EntityManager } from "typeorm";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/token.js";
 
 @Resolver(AccountUser)
 export class AccountUserResolver {
@@ -34,6 +43,8 @@ export class AccountUserResolver {
       };
     }
   }
+
+  // to register new user , otp will sent after creating user to verify email.
   @Mutation(() => UserRegisterResponse)
   async registerUser(
     @Arg("email") email: string,
@@ -101,6 +112,84 @@ export class AccountUserResolver {
     } catch (error) {
       return {
         otpSent: false,
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
+    }
+  }
+
+  // to verify otp sent to email.
+  @Mutation(() => VerifyEmailRegisterOtpResponse)
+  async verifyEmailRegisterOtp(
+    @Arg("email") email: string,
+    @Arg("otp") otp: string,
+    @Ctx() ctx: { res: Response }
+  ): Promise<VerifyEmailRegisterOtpResponse> {
+    try {
+      const userEmail = await userEmailRepository.findOneBy({
+        email: email,
+      });
+      if (!userEmail) {
+        throw new Error("Email not found.");
+      }
+      if (
+        userEmail?.lastOtpSent &&
+        userEmail?.lastOtpSentTime &&
+        userEmail?.otpExpiry
+      ) {
+        if (userEmail.otpExpiry < new Date()) {
+          throw new Error("OTP expired.");
+        }
+
+        if (userEmail.lastOtpSent != otp) {
+          throw new Error("Invalid OTP.");
+        }
+
+        if (userEmail.lastOtpSent == otp) {
+          userEmail.isVerified = true;
+          userEmail.lastOtpSent = null;
+          userEmail.lastOtpSentTime = null;
+          userEmail.otpExpiry = null;
+          userEmail.retryCount = null;
+          await userEmailRepository.save(userEmail);
+
+          const accessToken = generateAccessToken({
+            userId: userEmail.AccountUser.id,
+          });
+          const refreshToken = generateRefreshToken({
+            userId: userEmail.AccountUser.id,
+          });
+
+          ctx.res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 1000 * 60 * 60, // 1 hour
+          });
+
+          ctx.res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+          });
+
+          return {
+            otpVerified: true,
+          };
+        }
+      } else {
+        throw new Error("OTP not sent to this email.");
+      }
+
+      //default resp
+      return {
+        otpVerified: false,
+        error: "Internal Server Error.",
+      };
+    } catch (error) {
+      return {
+        otpVerified: false,
         error:
           error instanceof Error ? error.message : "Internal Server Error.",
       };

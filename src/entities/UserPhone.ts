@@ -36,24 +36,24 @@ export class UserPhone {
   })
   AccountUser: Relation<AccountUser>;
 
-  @Field()
+  @Field(() => String, { nullable: true })
   @Column({ nullable: true })
-  lastOtpSent: string;
+  lastOtpSent: string | null;
 
-  @Field()
+  @Field(() => Date, { nullable: true })
   @Column({ type: "timestamp", nullable: true })
-  lastOtpSentTime: Date;
+  lastOtpSentTime: Date | null;
 
-  @Field()
+  @Field(() => Date, { nullable: true })
   @Column({ type: "timestamp", nullable: true })
-  otpExpiry: Date;
+  otpExpiry: Date | null;
 
-  @Field()
+  @Field(() => String, { nullable: true })
   @Column({
     type: "varchar",
     nullable: true,
   })
-  retryCount: string;
+  retryCount: string | null;
 
   @Field()
   @CreateDateColumn({ type: "timestamp" })
