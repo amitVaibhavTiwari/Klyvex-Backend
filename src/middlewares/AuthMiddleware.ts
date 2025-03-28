@@ -17,17 +17,15 @@ export const isAuthenticated: MiddlewareFn<{
   const refreshToken = req?.cookies?.refreshToken;
 
   try {
-    // Check if access token is valid
     if (accessToken) {
       const decoded = verifyAccessToken(accessToken);
-      context.user = decoded; // Attach user info to context
+      context.user = decoded; // Attaching user info to context
       return next();
     }
   } catch (error) {
     console.log("Access Token Expired or Invalid");
   }
 
-  // Check if refresh token is valid and generate new access token if access token is expired.
   if (refreshToken) {
     try {
       const decodedRefresh: any = verifyRefreshToken(refreshToken);
@@ -39,7 +37,8 @@ export const isAuthenticated: MiddlewareFn<{
         throw new Error("User not found.");
       }
 
-      // before generating new refresh token, check for tokenId from db and tokenId from decoded token.
+      // before generating new refresh token, first check for tokenId from db and tokenId from decoded token.
+      // (this thing will help in future for blocking the refresh token for some user.)
       if (user.tokenId !== decodedRefresh.tokenId) {
         throw new Error("Invalid refresh tokenId.");
       }

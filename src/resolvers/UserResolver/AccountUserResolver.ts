@@ -1,4 +1,11 @@
-import { Resolver, Query, Mutation, Arg, Ctx } from "type-graphql";
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Arg,
+  Ctx,
+  UseMiddleware,
+} from "type-graphql";
 import { Response } from "express";
 import {
   userEmailRepository,
@@ -6,12 +13,13 @@ import {
 } from "../../repositories/repositories.js";
 import { AccountUser } from "../../entities/AccountUser.js";
 import { UserEmail } from "../../entities/UserEmail.js";
-import { hashPassword } from "../../utils/password.js";
+import { comparePasswords, hashPassword } from "../../utils/password.js";
 import { generateOTP } from "../../utils/OTP.js";
 import { sendRegistrationOtpEmail } from "../../utils/email.js";
 import { validate } from "class-validator";
 import {
   GetUserDetailsResponse,
+  LoginUserResponse,
   UserRegisterResponse,
   VerifyEmailRegisterOtpResponse,
 } from "./types.js";
@@ -20,6 +28,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../utils/token.js";
+import { isAuthenticated } from "../../middlewares/AuthMiddleware.js";
 
 @Resolver(AccountUser)
 export class AccountUserResolver {
@@ -30,6 +39,28 @@ export class AccountUserResolver {
     try {
       const user = await accountUserRepository.findOne({
         where: { id },
+        relations: ["UserEmail", "UserAddress", "UserPhone"],
+      });
+      if (!user) {
+        throw new Error("No User Found.");
+      }
+      return { user: user };
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
+    }
+  }
+
+  @Query(() => GetUserDetailsResponse, { nullable: true })
+  @UseMiddleware(isAuthenticated)
+  async getUserDetailsProtected(
+    @Ctx() ctx: any
+  ): Promise<GetUserDetailsResponse> {
+    try {
+      const user = await accountUserRepository.findOne({
+        where: { id: ctx.user.userID },
         relations: ["UserEmail", "UserAddress", "UserPhone"],
       });
       if (!user) {
@@ -126,12 +157,15 @@ export class AccountUserResolver {
     @Ctx() ctx: { res: Response }
   ): Promise<VerifyEmailRegisterOtpResponse> {
     try {
-      const userEmail = await userEmailRepository.findOneBy({
-        email: email,
+      const userEmail = await userEmailRepository.findOne({
+        where: { email: email },
+        relations: ["AccountUser"],
       });
+
       if (!userEmail) {
         throw new Error("Email not found.");
       }
+
       if (
         userEmail?.lastOtpSent &&
         userEmail?.lastOtpSentTime &&
@@ -156,7 +190,7 @@ export class AccountUserResolver {
           const accessToken = generateAccessToken({
             userId: userEmail.AccountUser.id,
           });
-          const refreshToken = generateRefreshToken({
+          const refreshToken = await generateRefreshToken({
             userId: userEmail.AccountUser.id,
           });
 
@@ -190,6 +224,66 @@ export class AccountUserResolver {
     } catch (error) {
       return {
         otpVerified: false,
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
+    }
+  }
+
+  // to login user
+  @Mutation(() => LoginUserResponse)
+  async loginUser(
+    @Arg("email") email: string,
+    @Arg("password") password: string,
+    @Ctx() ctx: { res: Response }
+  ): Promise<LoginUserResponse> {
+    try {
+      const userEmail = await userEmailRepository.findOne({
+        where: { email: email },
+        relations: ["AccountUser"],
+      });
+
+      if (!userEmail) {
+        throw new Error("Email not found.");
+      }
+
+      if (userEmail.isVerified == false) {
+        throw new Error("Email not verified.");
+      }
+
+      const hashedPassword = userEmail.password;
+      const isPasswordMatch = await comparePasswords(password, hashedPassword);
+      if (!isPasswordMatch) {
+        throw new Error("Invalid Password.");
+      }
+
+      const accessToken = generateAccessToken({
+        userId: userEmail.AccountUser.id,
+      });
+      const refreshToken = await generateRefreshToken({
+        userId: userEmail.AccountUser.id,
+      });
+
+      ctx.res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 1000 * 60 * 60, // 1 hour
+      });
+
+      ctx.res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      });
+
+      return {
+        loginSuccess: true,
+      };
+    } catch (error) {
+      return {
+        loginSuccess: false,
         error:
           error instanceof Error ? error.message : "Internal Server Error.",
       };

@@ -40,7 +40,7 @@ export class UserEmail {
   AccountUser: Relation<AccountUser>;
 
   @Field(() => String, { nullable: true })
-  @Column({ type: "string", nullable: true })
+  @Column({ type: "text", nullable: true })
   lastOtpSent: string | null;
 
   @Field(() => Date, { nullable: true })

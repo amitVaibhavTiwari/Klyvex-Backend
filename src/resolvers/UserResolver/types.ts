@@ -9,10 +9,18 @@ export class UserRegisterResponse {
   @Field({ nullable: true })
   error?: string;
 }
-@ObjectType() // this objectType decorator helps in type-graphQl to recognize that this is a type and it will be used in the schema
+@ObjectType()
 export class VerifyEmailRegisterOtpResponse {
   @Field(() => Boolean)
   otpVerified: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+}
+@ObjectType()
+export class LoginUserResponse {
+  @Field(() => Boolean)
+  loginSuccess: boolean;
 
   @Field({ nullable: true })
   error?: string;

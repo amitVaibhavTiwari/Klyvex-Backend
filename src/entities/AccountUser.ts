@@ -47,5 +47,4 @@ export class AccountUser {
   @Field(() => [UserAddress])
   @OneToMany(() => UserAddress, (UserAddress) => UserAddress.AccountUser)
   UserAddress: Relation<UserEmail[]>;
-
 }

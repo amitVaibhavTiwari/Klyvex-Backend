@@ -37,7 +37,7 @@ export class UserPhone {
   AccountUser: Relation<AccountUser>;
 
   @Field(() => String, { nullable: true })
-  @Column({ nullable: true })
+  @Column({ type: "text", nullable: true })
   lastOtpSent: string | null;
 
   @Field(() => Date, { nullable: true })
