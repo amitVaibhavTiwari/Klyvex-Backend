@@ -67,5 +67,7 @@ export const isAuthenticated: MiddlewareFn<{
     }
   }
 
-  throw new Error("Not authenticated. Please log in.");
+  return {
+    error: "Unauthorized",
+  };
 };
