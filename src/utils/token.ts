@@ -35,12 +35,10 @@ export const generateRefreshToken = async (payload: Payload) => {
   return jwt.sign(refreshTokenPayload, REFRESH_SECRET, { expiresIn: "7d" });
 };
 
-// Verify Access Token
 export const verifyAccessToken = (token: string) => {
   return jwt.verify(token, ACCESS_SECRET);
 };
 
-// Verify Refresh Token
 export const verifyRefreshToken = (token: string) => {
   return jwt.verify(token, REFRESH_SECRET);
 };

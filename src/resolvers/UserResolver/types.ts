@@ -25,6 +25,14 @@ export class LoginUserResponse {
   @Field({ nullable: true })
   error?: string;
 }
+@ObjectType()
+export class LogoutUserResponse {
+  @Field(() => Boolean)
+  logoutSuccess: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+}
 
 @ObjectType()
 export class GetUserDetailsResponse {
@@ -33,4 +41,15 @@ export class GetUserDetailsResponse {
 
   @Field({ nullable: true })
   error?: string;
+}
+@ObjectType()
+export class GetUserDetailsViaCookieResponse {
+  @Field(() => AccountUser, { nullable: true })
+  user?: AccountUser;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => Boolean)
+  userFound: boolean;
 }

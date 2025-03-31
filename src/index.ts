@@ -7,8 +7,13 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { buildSchema } from "type-graphql";
 import { AppDataSource } from "./dataSource/dataSource.js";
 import { AccountUserResolver } from "./resolvers/UserResolver/AccountUserResolver.js";
+import { CsrfMiddleware } from "./middlewares/CsrfMiddleware.js";
 
 const PORT = process.env.PORT || 4000;
+
+if (!process.env.ALLOWED_ORIGIN) {
+  throw new Error("ALLOWED_ORIGIN is not defined in .env");
+}
 
 const startGraphQlServer = async () => {
   try {
@@ -22,19 +27,21 @@ const startGraphQlServer = async () => {
 
     const server = new ApolloServer({
       schema,
-      introspection: process.env.NODE_ENV === "production" ? false : true,
+      introspection: process.env.NODE_ENV === "production" ? false : true, // this loads the graphql playground.
     });
 
     await server.start();
-
     const app = express();
+
+    app.use(CsrfMiddleware); //  for security against csrf attacks [it works only in production environment.].
     app.use(cookieParser());
 
     app.use(
       cors({
-        origin: function (origin, callback) {
-          callback(null, true); // Allow all origins
-        },
+        origin: process.env.ALLOWED_ORIGIN,
+        // origin: function (origin, callback) {
+        //   callback(null, true); // Allow all origins
+        // },
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,

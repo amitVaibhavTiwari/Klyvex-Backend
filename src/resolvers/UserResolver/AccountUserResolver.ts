@@ -19,7 +19,9 @@ import { sendRegistrationOtpEmail } from "../../utils/email.js";
 import { validate } from "class-validator";
 import {
   GetUserDetailsResponse,
+  GetUserDetailsViaCookieResponse,
   LoginUserResponse,
+  LogoutUserResponse,
   UserRegisterResponse,
   VerifyEmailRegisterOtpResponse,
 } from "./types.js";
@@ -29,6 +31,16 @@ import {
   generateRefreshToken,
 } from "../../utils/token.js";
 import { isAuthenticated } from "../../middlewares/AuthMiddleware.js";
+
+if (!process?.env?.SAME_SITE_COOKIES) {
+  throw new Error("SAME_SITE_COOKIES is not defined in .env");
+}
+if (!process?.env?.SECURE_COOKIES) {
+  throw new Error("SECURE_COOKIES is not defined in .env");
+}
+
+const sameSite: any = process.env.SAME_SITE_COOKIES;
+const secureCookie: any = process.env.SECURE_COOKIES;
 
 @Resolver(AccountUser)
 export class AccountUserResolver {
@@ -53,11 +65,11 @@ export class AccountUserResolver {
     }
   }
 
-  @Query(() => GetUserDetailsResponse, { nullable: true })
+  @Query(() => GetUserDetailsViaCookieResponse, { nullable: true })
   @UseMiddleware(isAuthenticated)
-  async getUserDetailsProtected(
+  async getUserDetailsViaCookie(
     @Ctx() ctx: any
-  ): Promise<GetUserDetailsResponse> {
+  ): Promise<GetUserDetailsViaCookieResponse> {
     try {
       const user = await accountUserRepository.findOne({
         where: { id: ctx.user.userID },
@@ -66,16 +78,17 @@ export class AccountUserResolver {
       if (!user) {
         throw new Error("No User Found.");
       }
-      return { user: user };
+      return { user: user, userFound: true };
     } catch (error) {
       return {
         error:
           error instanceof Error ? error.message : "Internal Server Error.",
+        userFound: false,
       };
     }
   }
 
-  // to register new user , otp will sent after creating user to verify email.
+  // to register new user (otp will sent after creating user to verify email.)
   @Mutation(() => UserRegisterResponse)
   async registerUser(
     @Arg("email") email: string,
@@ -196,15 +209,15 @@ export class AccountUserResolver {
 
           ctx.res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            secure: secureCookie,
+            sameSite: sameSite,
             maxAge: 1000 * 60 * 60, // 1 hour
           });
 
           ctx.res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            secure: secureCookie,
+            sameSite: sameSite,
             maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
           });
 
@@ -266,15 +279,15 @@ export class AccountUserResolver {
 
       ctx.res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: secureCookie,
+        sameSite: sameSite,
         maxAge: 1000 * 60 * 60, // 1 hour
       });
 
       ctx.res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: secureCookie,
+        sameSite: sameSite,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       });
 
@@ -284,6 +297,24 @@ export class AccountUserResolver {
     } catch (error) {
       return {
         loginSuccess: false,
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
+    }
+  }
+
+  // to logout user
+  @Mutation(() => LogoutUserResponse)
+  async logoutUser(@Ctx() ctx: { res: Response }): Promise<LogoutUserResponse> {
+    try {
+      ctx.res.clearCookie("accessToken");
+      ctx.res.clearCookie("refreshToken");
+      return {
+        logoutSuccess: true,
+      };
+    } catch (error) {
+      return {
+        logoutSuccess: false,
         error:
           error instanceof Error ? error.message : "Internal Server Error.",
       };
