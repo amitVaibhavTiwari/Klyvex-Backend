@@ -78,12 +78,11 @@ export class AccountUserResolver {
       if (!user) {
         throw new Error("No User Found.");
       }
-      return { user: user, userFound: true };
+      return { user: user,};
     } catch (error) {
       return {
         error:
           error instanceof Error ? error.message : "Internal Server Error.",
-        userFound: false,
       };
     }
   }

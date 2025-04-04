@@ -50,6 +50,4 @@ export class GetUserDetailsViaCookieResponse {
   @Field({ nullable: true })
   error?: string;
 
-  @Field(() => Boolean)
-  userFound: boolean;
 }
