@@ -32,7 +32,7 @@ export class AccountUser {
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
-  @Field(() => String) // GraphQL does not support JSON directly, so using String
+  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
   @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
   metaData: object;
 

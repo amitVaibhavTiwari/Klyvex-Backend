@@ -17,7 +17,7 @@ export class UserAddress {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Field(() => String) // GraphQL does not support JSON directly, so using String
+  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
   @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
   address: object;
 
