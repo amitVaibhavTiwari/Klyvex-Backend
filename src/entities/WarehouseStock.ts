@@ -1,49 +1,47 @@
 import {
   Entity,
+  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  OneToMany,
   UpdateDateColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
 } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
-import { Product } from "./Product.js";
 import { ProductVariant } from "./ProductVariant.js";
+import { Warehouse } from "./Warehouse.js";
 
 @ObjectType()
 @Entity()
-export class ProductImage {
+export class WarehouseStock {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Field(() => Product)
-  @ManyToOne(() => Product, (Product) => Product.ProductVariant, {
-    onDelete: "CASCADE",
-  })
-  Product: Relation<Product>;
-
   @Field(() => ProductVariant)
   @ManyToOne(
     () => ProductVariant,
-    (ProductVariant) => ProductVariant.ProductImage,
+    (ProductVariant) => ProductVariant.WarehouseStock,
     {
       onDelete: "CASCADE",
     }
   )
   ProductVariant: Relation<ProductVariant>;
 
-  @Field()
-  @Column()
-  imageUrl: string;
-
-  @Field(() => String, { nullable: true })
-  @Column({
-    type: "varchar",
-    nullable: true,
+  @Field(() => Warehouse)
+  @ManyToOne(() => Warehouse, (Warehouse) => Warehouse.Stock, {
+    onDelete: "CASCADE",
   })
-  rank: string;
+  Warehouse: Relation<ProductVariant>;
+
+  @Field()
+  @Column({ default: 0 })
+  stockQuantity: string;
+
+  @Field()
+  @Column({ default: 0 })
+  reservedQuantity: string;
 
   @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
   @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM

@@ -9,14 +9,14 @@ import {
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
 import { Length } from "class-validator";
-import { ProductCategoryRelation } from "./CategoryProductRelation.js";
+import { ProductCategoryRelation } from "./ProductCategoryRelation.js";
 
 @ObjectType()
 @Entity()
 export class ProductCategory {
   @Field(() => ID)
-  @PrimaryGeneratedColumn("uuid")
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Field()
   @Column()
@@ -41,10 +41,10 @@ export class ProductCategory {
   @Column({ default: true })
   isActive: boolean;
 
-  //   for relation of product and category inside productCateGoryRelation Entity
+  //   for relation of product and category inside productCategoryRelation Entity
   @OneToMany(() => ProductCategoryRelation, (relation) => relation.category)
   @Field(() => [ProductCategoryRelation])
-  relations: ProductCategoryRelation[];
+  products: Relation<ProductCategoryRelation[]>;
 
   @Field({ nullable: true })
   @Column({ type: "timestamp", nullable: true })

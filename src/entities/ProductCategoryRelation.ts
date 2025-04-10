@@ -1,7 +1,4 @@
-import {
-  Entity,
-  ManyToOne,
-} from "typeorm";
+import { Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
 import { Length } from "class-validator";
@@ -11,19 +8,19 @@ import { ProductCategory } from "./ProductCategory.js";
 @Entity()
 @ObjectType()
 export class ProductCategoryRelation {
-  //   @PrimaryGeneratedColumn("uuid")
-  //   @Field(() => String)
-  //   id: string;
+  @Field(() => ID)
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @ManyToOne(() => Product, (product) => product.relations, {
+  @ManyToOne(() => Product, (product) => product.categories, {
     onDelete: "SET NULL",
   })
   @Field(() => Product)
-  product: Product;
+  product: Relation<Product>;
 
-  @ManyToOne(() => ProductCategory, (category) => category.relations, {
+  @ManyToOne(() => ProductCategory, (category) => category.products, {
     onDelete: "CASCADE",
   })
   @Field(() => ProductCategory)
-  category: ProductCategory;
+  category: Relation<ProductCategory>;
 }

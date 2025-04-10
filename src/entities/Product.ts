@@ -10,7 +10,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
 import { Length } from "class-validator";
 import { ProductVariant } from "./ProductVariant.js";
-import { ProductCategoryRelation } from "./CategoryProductRelation.js";
+import { ProductCategoryRelation } from "./ProductCategoryRelation.js";
 
 @ObjectType()
 @Entity()
@@ -41,7 +41,7 @@ export class Product {
   //   for product and category relation inside ProductCategoryRelation Entity
   @OneToMany(() => ProductCategoryRelation, (relation) => relation.product)
   @Field(() => [ProductCategoryRelation])
-  relations: ProductCategoryRelation[];
+  categories: Relation<ProductCategoryRelation[]>;
 
   @Field()
   @CreateDateColumn({ type: "timestamp" })

@@ -12,6 +12,7 @@ import { type Relation } from "typeorm";
 import { Length } from "class-validator";
 import { Product } from "./Product.js";
 import { ProductImage } from "./ProductImage.js";
+import { WarehouseStock } from "./WarehouseStock.js";
 
 @ObjectType()
 @Entity()
@@ -70,6 +71,13 @@ export class ProductVariant {
   @Field(() => [ProductImage])
   @OneToMany(() => ProductImage, (ProductImage) => ProductImage.ProductVariant)
   ProductImage: Relation<ProductVariant[]>;
+
+  @Field(() => [WarehouseStock])
+  @OneToMany(
+    () => WarehouseStock,
+    (WarehouseStock) => WarehouseStock.ProductVariant
+  )
+  WarehouseStock: Relation<WarehouseStock[]>;
 
   @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
   @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
