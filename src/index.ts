@@ -8,6 +8,7 @@ import { buildSchema } from "type-graphql";
 import { AppDataSource } from "./dataSource/dataSource.js";
 import { AccountUserResolver } from "./resolvers/UserResolver/AccountUserResolver.js";
 import { CsrfMiddleware } from "./middlewares/CsrfMiddleware.js";
+import adminRouter from "./admin_dashboard/index.js";
 
 const PORT = process.env.PORT || 4000;
 
@@ -33,8 +34,8 @@ const startGraphQlServer = async () => {
     await server.start();
     const app = express();
 
-    app.use(CsrfMiddleware); //  for security against csrf attacks [it works only in production environment.].
     app.use(cookieParser());
+    app.use(CsrfMiddleware); //  for security against csrf attacks [it works only in production environment.].
 
     app.use(
       cors({
@@ -48,9 +49,12 @@ const startGraphQlServer = async () => {
       })
     );
 
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use("/api/v1/admin", adminRouter);
     app.use(
       "/graphql",
-      express.json(),
+      // express.json(),
       expressMiddleware(server, {
         context: async ({ req, res }) => ({
           req,

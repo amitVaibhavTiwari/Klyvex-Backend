@@ -11,6 +11,9 @@ import { ProductCategoryRelation } from "../entities/ProductCategoryRelation.js"
 import { ProductImage } from "../entities/ProductImage.js";
 import { Warehouse } from "../entities/Warehouse.js";
 import { WarehouseStock } from "../entities/WarehouseStock.js";
+import { AdminUser } from "../entities/AdminUser.js";
+import { AdminGroups } from "../entities/AdminGroups.js";
+import { AdminPermissions } from "../entities/AdminPermissions.js";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -24,6 +27,9 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: false,
   entities: [
+    AdminUser,
+    AdminGroups,
+    AdminPermissions,
     AccountUser,
     UserEmail,
     UserAddress,

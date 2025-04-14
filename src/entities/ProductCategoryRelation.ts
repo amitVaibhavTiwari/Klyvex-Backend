@@ -1,8 +1,6 @@
 import { Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
-import { Length } from "class-validator";
-import { ProductVariant } from "./ProductVariant.js";
 import { Product } from "./Product.js";
 import { ProductCategory } from "./ProductCategory.js";
 @Entity()
