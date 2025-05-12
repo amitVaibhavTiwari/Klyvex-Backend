@@ -7,6 +7,9 @@ import { AccountUser } from "../entities/AccountUser.js";
 import { UserAddress } from "../entities/UserAddress.js";
 import { UserEmail } from "../entities/UserEmail.js";
 import { UserPhone } from "../entities/UserPhone.js";
+import { AdminUser } from "../entities/AdminUser.js";
+import { AdminPermissions } from "../entities/AdminPermissions.js";
+import { AdminGroups } from "../entities/AdminGroups.js";
 
 export const bookRepository = AppDataSource.getRepository(Books);
 export const librarianRepository = AppDataSource.getRepository(Librarians);
@@ -17,3 +20,8 @@ export const accountUserRepository = AppDataSource.getRepository(AccountUser);
 export const userEmailRepository = AppDataSource.getRepository(UserEmail);
 export const userPhoneRepository = AppDataSource.getRepository(UserPhone);
 export const userAddressRepository = AppDataSource.getRepository(UserAddress);
+export const adminUserRepository = AppDataSource.getRepository(AdminUser);
+export const permissionGroupRepository =
+  AppDataSource.getRepository(AdminGroups);
+export const permissionRepository =
+  AppDataSource.getRepository(AdminPermissions);

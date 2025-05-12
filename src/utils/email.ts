@@ -27,10 +27,13 @@ export const sendRegistrationOtpEmail = async (
   };
 
   try {
-    await sgMail.send(msg);
+    const t = await sgMail.send(msg);
+    console.log("Email sent successfully", t);
+
     // console.log("Email sent successfully");
     return { sent: true };
   } catch (error: any) {
+    console.log("Error sending email:", error);
     console.error("SendGrid Error:", error?.response?.body || error);
     return { sent: false, error };
   }

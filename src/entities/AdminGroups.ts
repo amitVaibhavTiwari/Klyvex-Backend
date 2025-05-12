@@ -7,10 +7,12 @@ import {
   ManyToOne,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from "typeorm";
 import { type Relation } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { AdminPermissions } from "./AdminPermissions.js";
+import { AdminUser } from "./AdminUser.js";
 
 @ObjectType()
 @Entity()
@@ -22,6 +24,10 @@ export class AdminGroups {
   @Field()
   @Column({ unique: true })
   name: string;
+
+  @Field(() => [AdminUser])
+  @OneToMany(() => AdminUser, (AdminUser) => AdminUser.AdminGroups)
+  AdminUser: Relation<AdminUser[]>;
 
   @Field(() => Permissions)
   @ManyToMany(

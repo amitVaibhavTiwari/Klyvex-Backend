@@ -9,6 +9,7 @@ import {
 import { type Relation } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { IsEmail, Length } from "class-validator";
+import { AdminGroups } from "./AdminGroups.js";
 
 @ObjectType()
 @Entity()
@@ -16,6 +17,11 @@ export class AdminUser {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Field()
+  @Column()
+  @Length(1, 60)
+  name: string;
 
   @Field()
   @Column({ unique: true })
@@ -35,12 +41,11 @@ export class AdminUser {
   @Column({ default: true })
   isActive: boolean;
 
-  //   @Field(() => AccountUser)
-  //   @ManyToOne(() => AccountUser, (AccountUser) => AccountUser.UserEmail, {
-  //     //   this means if parent record is deleted, delete all child records with foreign key.
-  //     onDelete: "CASCADE",
-  //   })
-  //   AccountUser: Relation<AccountUser>;
+  @Field(() => AdminGroups)
+  @ManyToOne(() => AdminGroups, (AdminGroups) => AdminGroups.AdminUser, {
+    onDelete: "CASCADE",
+  })
+  AdminGroups: Relation<AdminGroups>;
 
   @Field(() => String, { nullable: true })
   @Column({ type: "text", nullable: true })
