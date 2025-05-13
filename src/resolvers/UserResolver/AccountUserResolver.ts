@@ -78,7 +78,7 @@ export class AccountUserResolver {
       if (!user) {
         throw new Error("No User Found.");
       }
-      return { user: user,};
+      return { user: user };
     } catch (error) {
       return {
         error:
@@ -256,7 +256,7 @@ export class AccountUserResolver {
       });
 
       if (!userEmail) {
-        throw new Error("Email not found.");
+        throw new Error("Invalid Email or Password.");
       }
 
       if (userEmail.isVerified == false) {
@@ -266,7 +266,7 @@ export class AccountUserResolver {
       const hashedPassword = userEmail.password;
       const isPasswordMatch = await comparePasswords(password, hashedPassword);
       if (!isPasswordMatch) {
-        throw new Error("Invalid Password.");
+        throw new Error("Invalid Email or Password.");
       }
 
       const accessToken = generateAccessToken({

@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import { accountUserRepository } from "../repositories/repositories.js";
 if (!process.env.ACCESS_TOKEN_SECRET) {
-  throw new Error("ACCESS_TOKEN_SECRET is not defined");
+  throw new Error("ACCESS_TOKEN_SECRET is not defined in dotenv");
 }
 if (!process.env.REFRESH_TOKEN_SECRET) {
-  throw new Error("REFRESH_TOKEN_SECRET is not defined");
+  throw new Error("REFRESH_TOKEN_SECRET is not defined in dotenv");
 }
 
 const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET;

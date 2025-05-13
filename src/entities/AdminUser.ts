@@ -41,6 +41,10 @@ export class AdminUser {
   @Column({ default: true })
   isActive: boolean;
 
+  @Field()
+  @Column("uuid", { unique: true, default: () => "uuid_generate_v4()" }) //to Auto-generate in PostgreSQL
+  tokenId: string;
+
   @Field(() => AdminGroups)
   @ManyToOne(() => AdminGroups, (AdminGroups) => AdminGroups.AdminUser, {
     onDelete: "CASCADE",

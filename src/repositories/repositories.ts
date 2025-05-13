@@ -10,6 +10,10 @@ import { UserPhone } from "../entities/UserPhone.js";
 import { AdminUser } from "../entities/AdminUser.js";
 import { AdminPermissions } from "../entities/AdminPermissions.js";
 import { AdminGroups } from "../entities/AdminGroups.js";
+import { Product } from "../entities/Product.js";
+import { ProductVariant } from "../entities/ProductVariant.js";
+import { ProductCategory } from "../entities/ProductCategory.js";
+import { ProductCategoryRelation } from "../entities/ProductCategoryRelation.js";
 
 export const bookRepository = AppDataSource.getRepository(Books);
 export const librarianRepository = AppDataSource.getRepository(Librarians);
@@ -25,3 +29,11 @@ export const permissionGroupRepository =
   AppDataSource.getRepository(AdminGroups);
 export const permissionRepository =
   AppDataSource.getRepository(AdminPermissions);
+export const productRepository = AppDataSource.getRepository(Product);
+export const productVariantRepository =
+  AppDataSource.getRepository(ProductVariant);
+export const productCategoryRepository =
+  AppDataSource.getRepository(ProductCategory);
+export const productCategoryRelationRepository = AppDataSource.getRepository(
+  ProductCategoryRelation
+);
