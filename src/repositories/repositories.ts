@@ -14,6 +14,7 @@ import { Product } from "../entities/Product.js";
 import { ProductVariant } from "../entities/ProductVariant.js";
 import { ProductCategory } from "../entities/ProductCategory.js";
 import { ProductCategoryRelation } from "../entities/ProductCategoryRelation.js";
+import { ProductImage } from "../entities/ProductImage.js";
 
 export const bookRepository = AppDataSource.getRepository(Books);
 export const librarianRepository = AppDataSource.getRepository(Librarians);
@@ -37,3 +38,4 @@ export const productCategoryRepository =
 export const productCategoryRelationRepository = AppDataSource.getRepository(
   ProductCategoryRelation
 );
+export const productImageRepository = AppDataSource.getRepository(ProductImage);

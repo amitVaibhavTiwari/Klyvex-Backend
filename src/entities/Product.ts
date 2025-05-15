@@ -26,11 +26,6 @@ export class Product {
 
   @Field()
   @Column()
-  @Length(10, 2000)
-  description: string;
-
-  @Field()
-  @Column()
   @Length(1, 200)
   slug: string;
 

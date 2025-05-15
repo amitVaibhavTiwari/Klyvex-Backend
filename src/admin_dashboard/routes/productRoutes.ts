@@ -2,16 +2,22 @@ import express from "express";
 import {
   addNewProduct,
   addNewProductCategory,
+  addProductToCategory,
 } from "../controllers/productControllers.js";
 import { adminAuthMiddleware } from "../middleware/AdminAuth.js";
 
 const productRouter = express.Router();
 
-productRouter.post("/add/new", addNewProduct);
+productRouter.post("/add/new", adminAuthMiddleware, addNewProduct);
 productRouter.post(
   "/add/new/category",
   adminAuthMiddleware,
   addNewProductCategory
+);
+productRouter.post(
+  "/add-product-category-relation",
+  adminAuthMiddleware,
+  addProductToCategory
 );
 
 export default productRouter;

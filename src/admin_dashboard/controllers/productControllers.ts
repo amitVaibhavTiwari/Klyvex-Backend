@@ -1,100 +1,304 @@
 import { Request, Response } from "express";
 import {
   adminUserRepository,
+  productCategoryRelationRepository,
   productCategoryRepository,
+  productImageRepository,
+  productRepository,
+  productVariantRepository,
 } from "../../repositories/repositories.js";
-import { AppDataSource } from "../../dataSource/dataSource.js";
 import { checkActionPermission } from "../../utils/checkPermission.js";
-
-export const addNewProduct = async ({ req, res }: any) => {
-  try {
-    // const product = new Product();
-    // const productCategory = new ProductCategory();
-    // const productCategoryRelation = new ProductCategoryRelation();
-
-    // product.name = "Product Name";
-    // product.description = "Product Description";
-    // product.price = 100;
-    // product.stock = 50;
-
-    // productCategory.name = "Category Name";
-
-    // productCategoryRelation.product = product;
-    // productCategoryRelation.category = productCategory;
-
-    // await productRepository.save(product);
-    // await productCategoryRepository.save(productCategory);
-    // await productCategoryRelationRepository.save(productCategoryRelation);
-
-    return res.send({
-      message: "Product added successfully",
-      status: true,
-    });
-  } catch (error: any) {
-    return {
-      message: error?.message || "boo",
-      status: false,
-    };
-  }
-};
 
 export const addNewProductCategory = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.body.name || !req.body.slug || !req.body.description) {
-      throw new Error("Name, slug and description are required");
+    const { name, slug, description, isActive, metaData, user } = req.body;
+    if (!name || !slug || !description) {
+      res.status(400).json({
+        status: "failed",
+        message: "name, slug, description are required.",
+      });
+      return;
     }
 
-    const user = await adminUserRepository.findOne({
-      where: {
-        id: req?.body?.user?.userId,
-      },
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
       relations: ["AdminGroups"],
     });
 
-    if (!user) {
-      throw new Error("User not found.");
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
     }
 
     const hasPermission = checkActionPermission(
       "manage_products",
-      user?.AdminGroups?.id
+      adminUser?.AdminGroups?.id
     );
 
     if (!hasPermission) {
-      throw new Error("You don't have permission to perform this action.");
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
     }
 
     const existingCategory = await productCategoryRepository.findOneBy({
-      name: req.body.name,
+      name,
     });
 
     if (existingCategory) {
-      throw new Error("Category name already exists.");
+      res.status(409).json({
+        status: "failed",
+        message: "Category name already exists.",
+      });
+      return;
     }
 
     const newCategory = productCategoryRepository.create({
-      name: req.body.name,
-      slug: req.body.slug,
-      description: req.body.description,
+      name,
+      slug,
+      description,
+      isActive,
+      metaData: metaData || null,
     });
-
-    if (req.body.metaData) {
-      newCategory.metaData = req.body.metaData;
-    }
 
     await productCategoryRepository.save(newCategory);
 
     res.status(201).json({
       status: "success",
-      message: "Product Category created successfully.",
+      message: "Product category created successfully.",
     });
   } catch (error: any) {
+    console.error("Error creating product category:", error);
     res.status(500).json({
       status: "failed",
-      message: error?.message || "Error creating super admin.",
+      message: error?.message || "Internal server error.",
+    });
+  }
+};
+
+export const addNewProduct = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      name,
+      slug,
+      price,
+      categoryId,
+      productMetaData,
+      variantMetaData,
+      tax,
+      description,
+      size,
+      color,
+      height,
+      width,
+      weight,
+      length,
+      images,
+      user,
+    } = req.body;
+
+    if (!name || !slug || !price || !categoryId) {
+      res.status(400).json({
+        status: "failed",
+        message: "name, slug, price, categoryId are required.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({ status: "failed", message: "User not found." });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_products",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
+    const productCategory = await productCategoryRepository.findOneBy({
+      id: categoryId,
+    });
+
+    if (!productCategory) {
+      res.status(404).json({
+        status: "failed",
+        message: "Product category not found.",
+      });
+      return;
+    }
+
+    await productRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const newProduct = productRepository.create({
+          name,
+          slug,
+          metaData: productMetaData || null,
+        });
+        const savedProduct = await transactionalEntityManager.save(newProduct);
+        const newVariant = productVariantRepository.create({
+          price,
+          metaData: variantMetaData || null,
+          tax,
+          description,
+          size,
+          color,
+          height,
+          width,
+          weight,
+          length,
+          Product: savedProduct,
+        });
+        const savedVariant = await transactionalEntityManager.save(newVariant);
+
+        // to link product with category
+        const productCategoryRelation =
+          productCategoryRelationRepository.create({
+            category: productCategory,
+            product: savedProduct,
+          });
+        await transactionalEntityManager.save(productCategoryRelation);
+
+        if (Array.isArray(images) && images.length > 0) {
+          const imageEntities = images.map((image: string, index: number) =>
+            productImageRepository.create({
+              imageUrl: image,
+              rank: (index + 1).toString(),
+              Product: savedProduct,
+              ProductVariant: savedVariant,
+            })
+          );
+          await transactionalEntityManager.save(imageEntities);
+        }
+      }
+    );
+
+    res.status(201).json({
+      status: "success",
+      message: "Product created successfully.",
+    });
+  } catch (error: any) {
+    console.error("Error creating product:", error);
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Internal Server Error.",
+    });
+  }
+};
+
+export const addProductToCategory = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { productId, categoryId, user } = req.body;
+
+    if (!productId || !categoryId) {
+      res.status(400).json({
+        status: "failed",
+        message: "productId and categoryId are required.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({ status: "failed", message: "User not found." });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_products",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
+    const productCategory = await productCategoryRepository.findOneBy({
+      id: categoryId,
+    });
+
+    if (!productCategory) {
+      res.status(404).json({
+        status: "failed",
+        message: "Product category not found.",
+      });
+      return;
+    }
+
+    const product = await productRepository.findOneBy({ id: productId });
+
+    if (!product) {
+      res.status(404).json({
+        status: "failed",
+        message: "Product not found.",
+      });
+      return;
+    }
+
+    const existingRelation = await productCategoryRelationRepository.findOneBy({
+      category: { id: categoryId },
+      product: { id: productId },
+    });
+
+    if (existingRelation) {
+      res.status(409).json({
+        status: "failed",
+        message:
+          "Product is already linked to this category. Please choose another category.",
+      });
+      return;
+    }
+
+    const newRelation = productCategoryRelationRepository.create({
+      category: productCategory,
+      product,
+    });
+
+    await productCategoryRelationRepository.save(newRelation);
+
+    res.status(201).json({
+      status: "success",
+      message: "Product added to collection successfully.",
+    });
+  } catch (error: any) {
+    console.error("Error adding product to collection:", error);
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Internal server error.",
     });
   }
 };
