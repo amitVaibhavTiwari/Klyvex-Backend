@@ -302,3 +302,130 @@ export const addProductToCategory = async (
     });
   }
 };
+
+export const addNewVariantToProduct = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      productId,
+      price,
+      metadata,
+      tax,
+      description,
+      size,
+      color,
+      height,
+      width,
+      weight,
+      length,
+      images,
+      user,
+    } = req.body;
+
+    if (!productId) {
+      res.status(400).json({
+        status: "failed",
+        message: "productId is required.",
+      });
+      return;
+    }
+
+    if (
+      !price &&
+      !metadata &&
+      !tax &&
+      !description &&
+      !size &&
+      !color &&
+      !height &&
+      !width &&
+      !weight &&
+      !length
+    ) {
+      res.status(400).json({
+        status: "failed",
+        message: "Nothing to add in variant.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({ status: "failed", message: "User not found." });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_products",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
+    const product = await productRepository.findOneBy({
+      id: productId,
+    });
+
+    if (!product) {
+      res.status(404).json({
+        status: "failed",
+        message: "Product not found.",
+      });
+      return;
+    }
+
+    await productVariantRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const newVariant = productVariantRepository.create({
+          price,
+          metaData: metadata || null,
+          tax,
+          description,
+          size,
+          color,
+          height,
+          width,
+          weight,
+          length,
+          Product: product,
+        });
+        const savedVariant = await transactionalEntityManager.save(newVariant);
+
+        if (Array.isArray(images) && images.length > 0) {
+          const imageEntities = images.map((image: string, index: number) =>
+            productImageRepository.create({
+              imageUrl: image,
+              rank: (index + 1).toString(),
+              Product: product,
+              ProductVariant: savedVariant,
+            })
+          );
+          await transactionalEntityManager.save(imageEntities);
+        }
+      }
+    );
+
+    res.status(201).json({
+      status: "success",
+      message: "Product variant added successfully.",
+    });
+  } catch (error: any) {
+    console.error("Error adding product variant:", error);
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Internal Server Error.",
+    });
+  }
+};

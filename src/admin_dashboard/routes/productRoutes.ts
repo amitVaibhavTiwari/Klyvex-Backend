@@ -2,6 +2,7 @@ import express from "express";
 import {
   addNewProduct,
   addNewProductCategory,
+  addNewVariantToProduct,
   addProductToCategory,
 } from "../controllers/productControllers.js";
 import { adminAuthMiddleware } from "../middleware/AdminAuth.js";
@@ -14,6 +15,13 @@ productRouter.post(
   adminAuthMiddleware,
   addNewProductCategory
 );
+
+productRouter.post(
+  "/add/new/variant",
+  adminAuthMiddleware,
+  addNewVariantToProduct
+);
+
 productRouter.post(
   "/add-product-category-relation",
   adminAuthMiddleware,
