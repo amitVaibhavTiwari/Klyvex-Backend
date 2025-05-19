@@ -33,11 +33,15 @@ export class WarehouseStock {
   @ManyToOne(() => Warehouse, (Warehouse) => Warehouse.Stock, {
     onDelete: "CASCADE",
   })
-  Warehouse: Relation<ProductVariant>;
+  Warehouse: Relation<Warehouse>;
 
   @Field()
   @Column({ default: 0 })
-  stockQuantity: string;
+  stockQuantity: number;
+
+  @Field()
+  @Column({ default: false })
+  isActive: boolean;
 
   @Field()
   @Column({ default: 0 })

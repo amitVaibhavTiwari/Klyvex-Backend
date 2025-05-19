@@ -33,6 +33,10 @@ export class ProductCategory {
   @Length(1, 2000)
   description: string;
 
+  @Field({ nullable: true })
+  @Column({ type: Number, nullable: true })
+  rank: number;
+
   @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
   @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
   metaData: object;

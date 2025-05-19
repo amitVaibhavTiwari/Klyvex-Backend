@@ -153,45 +153,54 @@ export const addNewProduct = async (
 
     await productRepository.manager.transaction(
       async (transactionalEntityManager) => {
-        const newProduct = productRepository.create({
-          name,
-          slug,
-          metaData: productMetaData || null,
-        });
-        const savedProduct = await transactionalEntityManager.save(newProduct);
-        const newVariant = productVariantRepository.create({
-          price,
-          metaData: variantMetaData || null,
-          tax,
-          description,
-          size,
-          color,
-          height,
-          width,
-          weight,
-          length,
-          Product: savedProduct,
-        });
-        const savedVariant = await transactionalEntityManager.save(newVariant);
-
-        // to link product with category
-        const productCategoryRelation =
-          productCategoryRelationRepository.create({
-            category: productCategory,
-            product: savedProduct,
+        try {
+          const newProduct = productRepository.create({
+            name,
+            slug,
+            metaData: productMetaData || null,
           });
-        await transactionalEntityManager.save(productCategoryRelation);
-
-        if (Array.isArray(images) && images.length > 0) {
-          const imageEntities = images.map((image: string, index: number) =>
-            productImageRepository.create({
-              imageUrl: image,
-              rank: (index + 1).toString(),
-              Product: savedProduct,
-              ProductVariant: savedVariant,
-            })
+          const savedProduct = await transactionalEntityManager.save(
+            newProduct
           );
-          await transactionalEntityManager.save(imageEntities);
+          const newVariant = productVariantRepository.create({
+            price,
+            metaData: variantMetaData || null,
+            tax,
+            description,
+            size,
+            color,
+            height,
+            width,
+            weight,
+            length,
+            Product: savedProduct,
+          });
+
+          const savedVariant = await transactionalEntityManager.save(
+            newVariant
+          );
+
+          const productCategoryRelation =
+            productCategoryRelationRepository.create({
+              category: productCategory,
+              product: savedProduct,
+            });
+          await transactionalEntityManager.save(productCategoryRelation);
+
+          if (Array.isArray(images) && images.length > 0) {
+            const imageEntities = images.map((image: string, index: number) =>
+              productImageRepository.create({
+                imageUrl: image,
+                rank: (index + 1).toString(),
+                Product: savedProduct,
+                ProductVariant: savedVariant,
+              })
+            );
+            await transactionalEntityManager.save(imageEntities);
+          }
+        } catch (error) {
+          console.error("Error saving product or variant:", error);
+          throw new Error("Failed to save product or variant.");
         }
       }
     );

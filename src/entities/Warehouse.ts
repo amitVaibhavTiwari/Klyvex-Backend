@@ -29,6 +29,10 @@ export class Warehouse {
   @Column()
   code: string;
 
+  @Field()
+  @Column({ default: false })
+  isActive: boolean;
+
   @Field(() => [WarehouseStock])
   @OneToMany(() => WarehouseStock, (WarehouseStock) => WarehouseStock.Warehouse)
   Stock: Relation<WarehouseStock[]>;
