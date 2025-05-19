@@ -122,10 +122,6 @@ export class AccountUserResolver {
       const hashedPassword = await hashPassword(password);
       userEmail.password = hashedPassword;
 
-      // instead of saving user and userEmail separately, we can use transaction to save both in one go. It gives a benefit that if user is failed to save, userEmail will not be saved.
-      // await userRepository.save(user);
-      // const newUserEmail = await userEmailRepository.save(userEmail);
-
       await accountUserRepository.manager.transaction(
         async (transactionalEntityManager: EntityManager) => {
           await transactionalEntityManager.save(user);

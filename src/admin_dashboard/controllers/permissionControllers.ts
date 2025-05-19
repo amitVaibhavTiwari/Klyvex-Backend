@@ -1,27 +1,65 @@
 import {
+  adminUserRepository,
   permissionGroupRepository,
   permissionRepository,
 } from "../../repositories/repositories.js";
 import { Request, Response } from "express";
+import { checkActionPermission } from "../../utils/checkPermission.js";
 
 export const createPermission = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.body.name) {
-      throw new Error("Permission name is required");
+    const { name, user } = req.body;
+
+    if (!name) {
+      res.status(400).json({
+        status: "failed",
+        message: "name is required for Permission.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_permissions",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
     }
 
     const existingPermission = await permissionRepository.findOneBy({
-      permission: req.body.name,
+      permission: name,
     });
     if (existingPermission) {
-      throw new Error("Permission name already exists.");
+      res.status(400).json({
+        status: "failed",
+        message: "Permission already exists.",
+      });
+      return;
     }
 
     const newPermission = permissionRepository.create({
-      permission: req.body.name,
+      permission: name,
     });
 
     await permissionRepository.save(newPermission);
@@ -36,25 +74,60 @@ export const createPermission = async (
     });
   }
 };
+
 export const createPermissionGroup = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.body.name) {
-      throw new Error("Permission Group name is required");
-    } 
+    const { user, name } = req.body;
+    if (!name) {
+      res.status(400).json({
+        status: "failed",
+        message: "name is required for permission group.",
+      });
+      return;
+    }
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_permissions",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
 
     const existingPermission = await permissionGroupRepository.findOneBy({
-      name: req.body.name,
+      name: name,
     });
 
     if (existingPermission) {
-      throw new Error("Permission Group already exists.");
+      res.status(400).json({
+        status: "failed",
+        message: "Permission Group already exists.",
+      });
+      return;
     }
 
     const newGroup = permissionGroupRepository.create({
-      name: req.body.name,
+      name: name,
     });
 
     await permissionGroupRepository.save(newGroup);
@@ -72,11 +145,47 @@ export const createPermissionGroup = async (
 
 export const addPermissionToGroup = async (req: Request, res: Response) => {
   try {
-    const { groupId, permissionId } = req.body;
+    const { groupId, permissionId, user } = req.body;
+
+    if (!groupId || !permissionId) {
+      res.status(400).json({
+        status: "failed",
+        message: "groupId and permissionId are required.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_permissions",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
     const group = await permissionGroupRepository.findOne({
       where: { id: groupId },
       relations: ["Permissions"],
     });
+
     const permission = await permissionRepository.findOneBy({
       id: permissionId,
     });
@@ -100,11 +209,40 @@ export const addPermissionToGroup = async (req: Request, res: Response) => {
 
 export const getPermissionGroups = async (req: Request, res: Response) => {
   try {
+    const { user } = req.body;
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+      relations: ["AdminGroups"],
+    });
+
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
+    }
+
+    const hasPermission = checkActionPermission(
+      "manage_permissions",
+      adminUser?.AdminGroups?.id
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
     const groups = await permissionGroupRepository.find({
       select: {
         name: true,
       },
     });
+
     res.json({
       status: "success",
       data: groups,

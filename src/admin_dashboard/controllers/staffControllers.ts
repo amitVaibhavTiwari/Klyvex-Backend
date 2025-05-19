@@ -71,24 +71,41 @@ export const loginStaff = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (!req.body.email || !req.body.password) {
-      throw new Error("Email and password are required");
+    const { email, password } = req.body;
+    if (email || !password) {
+      res.status(400).json({
+        status: "failed",
+        message: "email and password are required.",
+      });
+      return;
     }
 
     const staffMember = await adminUserRepository.findOneBy({
-      email: req.body.email,
+      email: email,
     });
 
     if (!staffMember) {
-      throw new Error("Invalid email or password.");
+      res.status(401).json({
+        status: "failed",
+        message: "Invalid email or password.",
+      });
+      return;
     }
 
     if (!staffMember.isVerified) {
-      throw new Error("Your email is not verified.");
+      res.status(401).json({
+        status: "failed",
+        message: "Your account is not verified.",
+      });
+      return;
     }
 
     if (!staffMember.isActive) {
-      throw new Error("Your account is not active.");
+      res.status(401).json({
+        status: "failed",
+        message: "Your account is not active.",
+      });
+      return;
     }
 
     const hashedPassword = staffMember.password;
@@ -96,8 +113,13 @@ export const loginStaff = async (
       req.body.password,
       hashedPassword
     );
+
     if (!isPasswordMatch) {
-      throw new Error("Invalid Email or Password.");
+      res.status(401).json({
+        status: "failed",
+        message: "Invalid email or password.",
+      });
+      return;
     }
 
     const accessToken = generateAdminAccessToken({
