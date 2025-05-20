@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   OneToMany,
   UpdateDateColumn,
+  ManyToOne,
 } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
@@ -63,9 +64,20 @@ export class ProductCategory {
   updatedAt: Date;
 
   //   this below one is for, let's say someone wants to create a category inside a category. ex: categories->shoes->running,sports
-  @Field(() => [ProductCategory], { nullable: true })
-  @OneToMany(() => ProductCategory, (ProductCategory) => ProductCategory.id, {
+  // @Field(() => [ProductCategory], { nullable: true })
+  // @OneToMany(() => ProductCategory, (ProductCategory) => ProductCategory.id, {
+  //   nullable: true,
+  // })
+  // parentCategoryId: Relation<ProductCategory[]>;
+
+  // Self-referencing relation for nested categories (e.g., parent -> child)
+  @Field(() => ProductCategory, { nullable: true })
+  @ManyToOne(() => ProductCategory, (category) => category.children, {
     nullable: true,
   })
-  parentCategoryId: Relation<ProductCategory[]>;
+  parentCategory?: Relation<ProductCategory>;
+
+  @Field(() => [ProductCategory], { nullable: true })
+  @OneToMany(() => ProductCategory, (category) => category.parentCategory)
+  children?: Relation<ProductCategory[]>;
 }

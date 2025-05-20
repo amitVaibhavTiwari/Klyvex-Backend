@@ -9,6 +9,8 @@ import { AppDataSource } from "./dataSource/dataSource.js";
 import { AccountUserResolver } from "./resolvers/UserResolver/AccountUserResolver.js";
 import { CsrfMiddleware } from "./middlewares/CsrfMiddleware.js";
 import adminRouter from "./admin_dashboard/index.js";
+import { ProductCategoryResolver } from "./resolvers/ProductCategoryResolver/ProductCategoryResolver.js";
+import { ProductResolver } from "./resolvers/ProductResolver/ProductResolver.js";
 
 const PORT = process.env.PORT || 4000;
 
@@ -22,7 +24,11 @@ const startGraphQlServer = async () => {
     console.log("Data Source has been initialized!");
 
     const schema = await buildSchema({
-      resolvers: [AccountUserResolver],
+      resolvers: [
+        AccountUserResolver,
+        ProductCategoryResolver,
+        ProductResolver,
+      ],
       validate: true,
     });
 

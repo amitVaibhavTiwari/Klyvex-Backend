@@ -13,6 +13,7 @@ import { Length } from "class-validator";
 import { Product } from "./Product.js";
 import { ProductImage } from "./ProductImage.js";
 import { WarehouseStock } from "./WarehouseStock.js";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -27,12 +28,12 @@ export class ProductVariant {
   })
   Product: Relation<Product>;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   price: object;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   tax: object;
 
   @Field({ nullable: true })
@@ -79,8 +80,8 @@ export class ProductVariant {
   )
   WarehouseStock: Relation<WarehouseStock[]>;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   metaData: object;
 
   @Field()
