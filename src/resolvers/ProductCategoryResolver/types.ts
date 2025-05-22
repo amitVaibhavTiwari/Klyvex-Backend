@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from "type-graphql";
+import { Product } from "../../entities/Product.js";
 
 @ObjectType()
 class Categories {
@@ -37,6 +38,14 @@ class Categories {
 export class GetAllCategoriesResponse {
   @Field(() => [Categories], { nullable: true })
   categories?: Categories[];
+
+  @Field({ nullable: true })
+  error?: string;
+}
+@ObjectType()
+export class GetAllProductsForCategoryResponse {
+  @Field(() => [Product], { nullable: true })
+  products?: Product[];
 
   @Field({ nullable: true })
   error?: string;

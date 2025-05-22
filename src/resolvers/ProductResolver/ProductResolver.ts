@@ -33,10 +33,5 @@ export class ProductResolver {
     }
   }
 
-  //   @Query(() => test, { nullable: true })
-  //   async getTest(): Promise<{ message: string }> {
-  //     return {
-  //       message: "Hello World",
-  //     };
-  //   }
+
 }
