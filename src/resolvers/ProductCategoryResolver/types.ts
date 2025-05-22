@@ -1,5 +1,5 @@
 import { Field, ID, ObjectType } from "type-graphql";
-import { Product } from "../../entities/Product.js";
+import GraphQLJSON from "graphql-type-json";
 
 @ObjectType()
 class Categories {
@@ -18,7 +18,7 @@ class Categories {
   @Field({ nullable: true })
   rank: number;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
+  @Field(() => GraphQLJSON, { nullable: true })
   metaData: object;
 
   @Field()
@@ -38,14 +38,6 @@ class Categories {
 export class GetAllCategoriesResponse {
   @Field(() => [Categories], { nullable: true })
   categories?: Categories[];
-
-  @Field({ nullable: true })
-  error?: string;
-}
-@ObjectType()
-export class GetAllProductsForCategoryResponse {
-  @Field(() => [Product], { nullable: true })
-  products?: Product[];
 
   @Field({ nullable: true })
   error?: string;
