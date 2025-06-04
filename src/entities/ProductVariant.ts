@@ -6,6 +6,7 @@ import {
   OneToMany,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
@@ -22,15 +23,21 @@ export class ProductVariant {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
+  @Field()
+  @Column("uuid")
+  productId: string;
+
   @Field(() => Product)
   @ManyToOne(() => Product, (Product) => Product.ProductVariant, {
     onDelete: "CASCADE",
   })
+  @JoinColumn({ name: "productId" })
   Product: Relation<Product>;
 
   @Field(() => GraphQLJSON, { nullable: true })
   @Column("jsonb", { nullable: true })
   price: object;
+  @Field()
 
   @Field(() => GraphQLJSON, { nullable: true })
   @Column("jsonb", { nullable: true })
@@ -71,7 +78,7 @@ export class ProductVariant {
 
   @Field(() => [ProductImage])
   @OneToMany(() => ProductImage, (ProductImage) => ProductImage.ProductVariant)
-  ProductImage: Relation<ProductVariant[]>;
+  ProductImage: Relation<ProductImage[]>;
 
   @Field(() => [WarehouseStock])
   @OneToMany(

@@ -20,7 +20,7 @@ export const adminAuthMiddleware = async (
   try {
     if (accessToken) {
       const decoded = verifyAdminAccessToken(accessToken);
-      req.body.user = decoded; // Attaching user info to request
+      req.body.user = decoded;
       return next();
     }
   } catch (error) {
@@ -38,7 +38,7 @@ export const adminAuthMiddleware = async (
         throw new Error("User not found.");
       }
 
-      // before generating new access token, first check for tokenId from db and tokenId from decoded token.
+      // before generating new access token, we'll first check for tokenId from db and tokenId from decoded token.
       // (this thing will help in future for blocking the refresh token for some user.)
       if (user.tokenId !== decodedRefresh.tokenId) {
         throw new Error("Invalid refresh tokenId.");

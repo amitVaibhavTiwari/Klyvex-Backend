@@ -26,6 +26,7 @@ export const AppDataSource = new DataSource({
   // below one is to synchronize the database with the entities. Don't use in production, use when someone is starting project with their own DB withour running migrations.
   synchronize: false,
   logging: false,
+  cache:false,
   entities: [
     AdminUser,
     AdminGroups,

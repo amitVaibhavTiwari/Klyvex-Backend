@@ -133,13 +133,13 @@ export const loginStaff = async (
       httpOnly: true,
       secure: secureCookie,
       sameSite: sameSite,
-      maxAge: 1000 * 60 * 60, // 1 hour
+      maxAge: 1000 * 60 * 60,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: secureCookie,
       sameSite: sameSite,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      maxAge: 1000 * 60 * 60 * 24 * 7, 
     });
 
     res.status(200).json({

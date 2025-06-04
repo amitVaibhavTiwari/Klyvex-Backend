@@ -5,6 +5,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  JoinColumn,
 } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
@@ -18,10 +19,19 @@ export class ProductImage {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Field()
+  @Column("uuid")
+  productId: string;
+
+  @Field()
+  @Column("uuid")
+  productVariantId: string;
+
   @Field(() => Product)
   @ManyToOne(() => Product, (Product) => Product.ProductVariant, {
     onDelete: "CASCADE",
   })
+  @JoinColumn({ name: "productId" })
   Product: Relation<Product>;
 
   @Field(() => ProductVariant)
@@ -32,6 +42,7 @@ export class ProductImage {
       onDelete: "CASCADE",
     }
   )
+  @JoinColumn({ name: "productVariantId" })
   ProductVariant: Relation<ProductVariant>;
 
   @Field()

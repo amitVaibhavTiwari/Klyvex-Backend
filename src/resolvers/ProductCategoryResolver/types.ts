@@ -1,5 +1,5 @@
 import { Field, ID, ObjectType } from "type-graphql";
-import GraphQLJSON from "graphql-type-json";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 class Categories {
