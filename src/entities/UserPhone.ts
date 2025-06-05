@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { type Relation } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
@@ -29,11 +30,16 @@ export class UserPhone {
   @Column()
   isVerified: boolean;
 
+  @Field()
+  @Column("uuid")
+  accountUserId: string;
+
   @Field(() => AccountUser)
   @ManyToOne(() => AccountUser, (AccountUser) => AccountUser.UserPhone, {
     //   this means if parent record is deleted, delete all child records with foreign key.
     onDelete: "CASCADE",
   })
+  @JoinColumn({ name: "accountUserId" })
   AccountUser: Relation<AccountUser>;
 
   @Field(() => String, { nullable: true })

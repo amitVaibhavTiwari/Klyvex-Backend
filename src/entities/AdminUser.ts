@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { type Relation } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
@@ -45,10 +46,15 @@ export class AdminUser {
   @Column("uuid", { unique: true, default: () => "uuid_generate_v4()" }) //to Auto-generate in PostgreSQL
   tokenId: string;
 
+  @Field()
+  @Column({ type: "int" })
+  adminGroupsId: number;
+
   @Field(() => AdminGroups)
   @ManyToOne(() => AdminGroups, (AdminGroups) => AdminGroups.AdminUser, {
     onDelete: "CASCADE",
   })
+  @JoinColumn({ name: "adminGroupsId" })
   AdminGroups: Relation<AdminGroups>;
 
   @Field(() => String, { nullable: true })
