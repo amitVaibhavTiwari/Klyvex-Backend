@@ -37,7 +37,6 @@ export class ProductVariant {
   @Field(() => GraphQLJSON, { nullable: true })
   @Column("jsonb", { nullable: true })
   price: object;
-  @Field()
 
   @Field(() => GraphQLJSON, { nullable: true })
   @Column("jsonb", { nullable: true })

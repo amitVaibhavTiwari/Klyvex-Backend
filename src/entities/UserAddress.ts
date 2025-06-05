@@ -9,6 +9,7 @@ import {
 import { type Relation } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { AccountUser } from "./AccountUser.js";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -17,8 +18,8 @@ export class UserAddress {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   address: object;
 
   @Field(() => AccountUser)

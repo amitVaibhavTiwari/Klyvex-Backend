@@ -9,6 +9,7 @@ import {
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
 import { WarehouseStock } from "./WarehouseStock.js";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -17,8 +18,8 @@ export class Warehouse {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Field(() => String, { nullable: false }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: false }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: false })
+  @Column("jsonb", { nullable: false })
   address: object;
 
   @Field()
@@ -37,8 +38,8 @@ export class Warehouse {
   @OneToMany(() => WarehouseStock, (WarehouseStock) => WarehouseStock.Warehouse)
   Stock: Relation<WarehouseStock[]>;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   metaData: object;
 
   @Field()

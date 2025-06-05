@@ -11,6 +11,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
 import { Length } from "class-validator";
 import { ProductCategoryRelation } from "./ProductCategoryRelation.js";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -38,8 +39,8 @@ export class ProductCategory {
   @Column({ type: Number, nullable: true })
   rank: number;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   metaData: object;
 
   @Field()

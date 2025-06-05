@@ -11,6 +11,7 @@ import { UserEmail } from "./UserEmail.js";
 import { UserPhone } from "./UserPhone.js";
 import { UserAddress } from "./UserAddress.js";
 import { Length } from "class-validator";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -32,8 +33,8 @@ export class AccountUser {
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   metaData: object;
 
   @Field(() => [UserEmail])

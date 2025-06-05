@@ -11,6 +11,7 @@ import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
 import { ProductVariant } from "./ProductVariant.js";
 import { Warehouse } from "./Warehouse.js";
+import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
 @Entity()
@@ -57,8 +58,8 @@ export class WarehouseStock {
   @Column({ default: 0 })
   reservedQuantity: string;
 
-  @Field(() => String, { nullable: true }) // GraphQL does not support JSON directly, so using String
-  @Column("jsonb", { nullable: true }) // Correctly define as JSONB in TypeORM
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
   metaData: object;
 
   @Field()
