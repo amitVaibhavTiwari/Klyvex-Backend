@@ -25,6 +25,10 @@ export class AdminGroups {
   @Column({ unique: true })
   name: string;
 
+  @Field()
+  @Column({ default: true })
+  isActive: boolean;
+
   @Field(() => [AdminUser])
   @OneToMany(() => AdminUser, (AdminUser) => AdminUser.AdminGroups)
   AdminUser: Relation<AdminUser[]>;

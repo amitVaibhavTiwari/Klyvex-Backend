@@ -5,13 +5,18 @@ import {
 } from "../../repositories/repositories.js";
 import { Request, Response } from "express";
 import { checkActionPermission } from "../../utils/checkPermission.js";
+import { User } from "../Types.js";
+import { AppDataSource } from "../../dataSource/dataSource.js";
+import { AdminPermissions } from "../../entities/AdminPermissions.js";
+import { AdminGroups } from "../../entities/AdminGroups.js";
+import { PermissionEnum } from "../Permissions.js";
 
 export const createPermission = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { name, user } = req.body;
+    const { name, user }: { name: string; user: User } = req.body;
 
     if (!name) {
       res.status(400).json({
@@ -34,8 +39,8 @@ export const createPermission = async (
       return;
     }
 
-    const hasPermission = checkActionPermission(
-      "manage_permissions",
+    const hasPermission = await checkActionPermission(
+      PermissionEnum.manage_permissions,
       adminUser?.AdminGroups?.id
     );
 
@@ -50,6 +55,7 @@ export const createPermission = async (
     const existingPermission = await permissionRepository.findOneBy({
       permission: name,
     });
+
     if (existingPermission) {
       res.status(400).json({
         status: "failed",
@@ -58,11 +64,36 @@ export const createPermission = async (
       return;
     }
 
-    const newPermission = permissionRepository.create({
-      permission: name,
+    //  new permission will be created and automatically assigned to super_admin.
+    await AppDataSource.transaction(async (transactionalEntityManager) => {
+      const newPermission = transactionalEntityManager.create(
+        AdminPermissions,
+        {
+          permission: name,
+        }
+      );
+
+      await transactionalEntityManager.save(newPermission);
+
+      const superUserGroup = await transactionalEntityManager.findOne(
+        AdminGroups,
+        {
+          where: { name: "super_admin" },
+          relations: ["Permissions"],
+        }
+      );
+
+      if (!superUserGroup) {
+        throw new Error("Super User group not found.");
+      }
+
+      superUserGroup.Permissions = [
+        ...(superUserGroup.Permissions || []),
+        newPermission,
+      ];
+      await transactionalEntityManager.save(superUserGroup);
     });
 
-    await permissionRepository.save(newPermission);
     res.status(201).json({
       status: "success",
       message: "Permission created successfully.",
@@ -80,7 +111,8 @@ export const createPermissionGroup = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { user, name } = req.body;
+    const { user, name }: { user: User; name: string } = req.body;
+
     if (!name) {
       res.status(400).json({
         status: "failed",
@@ -88,6 +120,7 @@ export const createPermissionGroup = async (
       });
       return;
     }
+
     const adminUser = await adminUserRepository.findOne({
       where: { id: user.userId },
       relations: ["AdminGroups"],
@@ -102,7 +135,7 @@ export const createPermissionGroup = async (
     }
 
     const hasPermission = checkActionPermission(
-      "manage_permissions",
+      PermissionEnum.manage_permissions,
       adminUser?.AdminGroups?.id
     );
 
@@ -145,7 +178,11 @@ export const createPermissionGroup = async (
 
 export const addPermissionToGroup = async (req: Request, res: Response) => {
   try {
-    const { groupId, permissionId, user } = req.body;
+    const {
+      groupId,
+      permissionId,
+      user,
+    }: { groupId: number; permissionId: number; user: User } = req.body;
 
     if (!groupId || !permissionId) {
       res.status(400).json({
@@ -169,7 +206,7 @@ export const addPermissionToGroup = async (req: Request, res: Response) => {
     }
 
     const hasPermission = checkActionPermission(
-      "manage_permissions",
+      PermissionEnum.manage_permissions,
       adminUser?.AdminGroups?.id
     );
 
@@ -195,6 +232,7 @@ export const addPermissionToGroup = async (req: Request, res: Response) => {
 
     group.Permissions.push(permission);
     await permissionGroupRepository.save(group);
+
     res.status(200).json({
       status: "success",
       message: "Permission added to group successfully.",
@@ -207,9 +245,24 @@ export const addPermissionToGroup = async (req: Request, res: Response) => {
   }
 };
 
-export const getPermissionGroups = async (req: Request, res: Response) => {
+export const deletePermissionFromGroup = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const { user } = req.body;
+    const {
+      groupId,
+      permissionId,
+      user,
+    }: { groupId: number; permissionId: number; user: User } = req.body;
+
+    if (!groupId || !permissionId) {
+      res.status(400).json({
+        status: "failed",
+        message: "groupId and permissionId are required.",
+      });
+      return;
+    }
 
     const adminUser = await adminUserRepository.findOne({
       where: { id: user.userId },
@@ -225,7 +278,7 @@ export const getPermissionGroups = async (req: Request, res: Response) => {
     }
 
     const hasPermission = checkActionPermission(
-      "manage_permissions",
+      PermissionEnum.manage_permissions,
       adminUser?.AdminGroups?.id
     );
 
@@ -237,9 +290,46 @@ export const getPermissionGroups = async (req: Request, res: Response) => {
       return;
     }
 
+    const group = await permissionGroupRepository.findOne({
+      where: { id: groupId },
+      relations: ["Permissions"],
+    });
+
+    if (!group) {
+      res.status(404).json({
+        status: "failed",
+        message: "Permission Group not found.",
+      });
+      return;
+    }
+
+    group.Permissions = group.Permissions.filter(
+      (permission) => permission.id !== permissionId
+    );
+
+    await permissionGroupRepository.save(group);
+
+    res.status(200).json({
+      status: "success",
+      message: "Permission removed from group successfully.",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error removing Permission from Group.",
+    });
+  }
+};
+
+export const getPermissionGroups = async (req: Request, res: Response) => {
+  const { isActive }: { isActive?: boolean } = req.query;
+  try {
     const groups = await permissionGroupRepository.find({
       select: {
         name: true,
+      },
+      where: {
+        isActive: isActive ? isActive : true,
       },
     });
 
@@ -248,6 +338,65 @@ export const getPermissionGroups = async (req: Request, res: Response) => {
       data: groups,
     });
   } catch (error: any) {
-    throw new Error(error?.message || "Error fetching permission groups");
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error fetching permission groups",
+    });
+  }
+};
+
+export const getSinglePermissionGroup = async (req: Request, res: Response) => {
+  try {
+    const { groupId }: { groupId: number } = req.body;
+
+    if (!groupId) {
+      res.status(404).json({
+        status: "failed",
+        message: "groupId is required.",
+      });
+      return;
+    }
+
+    const group = await permissionGroupRepository.findOne({
+      where: { id: groupId },
+      relations: ["Permissions"],
+    });
+
+    if (!group) {
+      res.status(404).json({
+        status: "failed",
+        message: "Permission Group not found.",
+      });
+      return;
+    }
+
+    const permissions = group?.Permissions;
+
+    res.json({
+      status: "success",
+      data: permissions,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error removing Permission from Group.",
+    });
+  }
+};
+
+export const getAllPermissions = async (req: Request, res: Response) => {
+  try {
+    const permission = await permissionRepository.find({
+      select: {
+        permission: true,
+      },
+    });
+
+    res.json({
+      status: "success",
+      data: permission,
+    });
+  } catch (error: any) {
+    throw new Error(error?.message || "Error fetching permissions");
   }
 };

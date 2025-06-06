@@ -18,7 +18,7 @@ export const addSuperAdmin = async (
 ): Promise<void> => {
   try {
     if (!req.body.name || !req.body.email || !req.body.password) {
-      throw new Error("Name, email and password are required");
+      throw new Error("name, email and password are required");
     }
 
     const existingSuperAdmin = await adminUserRepository.findOneBy({
@@ -71,8 +71,9 @@ export const loginStaff = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { email, password } = req.body;
-    if (email || !password) {
+    const { email, password }: { email: string; password: string } = req.body;
+
+    if (!email || !password) {
       res.status(400).json({
         status: "failed",
         message: "email and password are required.",
@@ -139,7 +140,7 @@ export const loginStaff = async (
       httpOnly: true,
       secure: secureCookie,
       sameSite: sameSite,
-      maxAge: 1000 * 60 * 60 * 24 * 7, 
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
     res.status(200).json({

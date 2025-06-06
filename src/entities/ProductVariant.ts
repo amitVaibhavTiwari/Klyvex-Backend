@@ -34,6 +34,14 @@ export class ProductVariant {
   @JoinColumn({ name: "productId" })
   Product: Relation<Product>;
 
+  @Field()
+  @Column({ default: false })
+  isDefault: boolean;
+
+  @Field()
+  @Column({ default: true })
+  isActive: boolean;
+
   @Field(() => GraphQLJSON, { nullable: true })
   @Column("jsonb", { nullable: true })
   price: object;
