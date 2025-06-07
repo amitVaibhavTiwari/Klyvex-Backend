@@ -6,7 +6,9 @@ import {
 import { comparePasswords, hashPassword } from "../../utils/password.js";
 import {
   generateAdminAccessToken,
+  generateAdminCSRFToken,
   generateAdminRefreshToken,
+  generateAdminSessionId,
 } from "../../utils/adminTokens.js";
 
 const sameSite: any = process.env.SAME_SITE_COOKIES;
@@ -130,6 +132,23 @@ export const loginStaff = async (
       userId: staffMember.id,
     });
 
+    const sessionId = generateAdminSessionId();
+    const csrfToken = generateAdminCSRFToken(sessionId);
+
+    console.log("sessionId", sessionId);
+
+    //not adding expiry time of csrf token cookie as it itself contains a timestamp and will expire after 15 minutes.
+    res.cookie("csrf_token", csrfToken, {
+      httpOnly: false,
+      secure: secureCookie,
+      sameSite: sameSite,
+    });
+    res.cookie("sessionId", sessionId, {
+      httpOnly: true,
+      secure: secureCookie,
+      sameSite: sameSite,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: secureCookie,

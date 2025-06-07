@@ -30,19 +30,19 @@ permissionRouter.post(
 );
 permissionRouter.get(
   "/get-permission-groups",
-  adminAuthMiddleware,
+  // adminAuthMiddleware,
   getPermissionGroups
 );
 
 permissionRouter.get(
   "/get-permission-group",
-  adminAuthMiddleware,
+  // adminAuthMiddleware,
   getSinglePermissionGroup
 );
 
 permissionRouter.get(
   "/get-all-permissions",
-  adminAuthMiddleware,
+  // adminAuthMiddleware,
   getAllPermissions
 );
 
