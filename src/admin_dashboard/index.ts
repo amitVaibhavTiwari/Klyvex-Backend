@@ -1,11 +1,11 @@
 import express from "express";
 import productRouter from "./routes/productRoutes.js";
 import permissionRouter from "./routes/permissionRoutes.js";
-import adminUserRouter from "./routes/adminUserRoutes.js";
 import warehouseRouter from "./routes/warehouseRoutes.js";
 import { adminAuthMiddleware } from "./middleware/AdminAuth.js";
-import { CsrfMiddleware } from "../middlewares/CsrfMiddleware.js";
 import { adminCSRFMiddleware } from "./middleware/CSRFMiddleware.js";
+import authRouter from "./routes/authRoutes.js";
+import staffRouter from "./routes/staffRoutes.js";
 
 const adminRouter = express.Router();
 
@@ -13,13 +13,26 @@ adminRouter.get("/", (req, res) => {
   res.send("Welcome to the admin routes.");
 });
 
-adminRouter.use("/staff", adminUserRouter);
-adminRouter.use("/products", productRouter);
+adminRouter.use("/auth", authRouter);
+adminRouter.use(
+  "/staff",
+  [adminAuthMiddleware, adminCSRFMiddleware],
+  staffRouter
+);
+adminRouter.use(
+  "/products",
+  [adminAuthMiddleware, adminCSRFMiddleware],
+  productRouter
+);
 adminRouter.use(
   "/permissions",
   [adminAuthMiddleware, adminCSRFMiddleware],
   permissionRouter
 );
-adminRouter.use("/warehouse", warehouseRouter);
+adminRouter.use(
+  "/warehouse",
+  [adminAuthMiddleware, adminCSRFMiddleware],
+  warehouseRouter
+);
 
 export default adminRouter;

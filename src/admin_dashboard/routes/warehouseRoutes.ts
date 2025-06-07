@@ -1,5 +1,4 @@
 import express from "express";
-import { adminAuthMiddleware } from "../middleware/AdminAuth.js";
 import {
   addProductToWarehouse,
   addWarehouse,
@@ -8,17 +7,8 @@ import {
 
 const warehouseRouter = express.Router();
 
-warehouseRouter.post("/add/new", adminAuthMiddleware, addWarehouse);
-warehouseRouter.post(
-  "/add/new/product",
-  adminAuthMiddleware,
-  addProductToWarehouse
-);
-
-warehouseRouter.post(
-  "/edit-warehouse-stock",
-  adminAuthMiddleware,
-  editWarehouseStock
-);
+warehouseRouter.post("/add/new", addWarehouse);
+warehouseRouter.post("/add/new/product", addProductToWarehouse);
+warehouseRouter.post("/edit-warehouse-stock", editWarehouseStock);
 
 export default warehouseRouter;

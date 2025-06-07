@@ -5,27 +5,14 @@ import {
   addNewVariantToProduct,
   addProductToCategory,
 } from "../controllers/productControllers.js";
-import { adminAuthMiddleware } from "../middleware/AdminAuth.js";
 
 const productRouter = express.Router();
 
-productRouter.post("/add/new", adminAuthMiddleware, addNewProduct);
-productRouter.post(
-  "/add/new/category",
-  adminAuthMiddleware,
-  addNewProductCategory
-);
+productRouter.post("/add/new", addNewProduct);
+productRouter.post("/add/new/category", addNewProductCategory);
 
-productRouter.post(
-  "/add/new/variant",
-  adminAuthMiddleware,
-  addNewVariantToProduct
-);
+productRouter.post("/add/new/variant", addNewVariantToProduct);
 
-productRouter.post(
-  "/add-product-category-relation",
-  adminAuthMiddleware,
-  addProductToCategory
-);
+productRouter.post("/add-product-category-relation", addProductToCategory);
 
 export default productRouter;
