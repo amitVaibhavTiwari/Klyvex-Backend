@@ -212,3 +212,158 @@ export const sendStaffInvitationLink = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const changeStaffMemberGroup = async (req: Request, res: Response) => {
+  try {
+    const { id, groupId, user }: { id: number; groupId: number; user: User } =
+      req.body;
+
+    if (!id || !groupId) {
+      res.status(400).json({
+        status: "failed",
+        message: "id and groupId are required.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+    });
+
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
+    }
+
+    const hasPermission = await checkActionPermission(
+      PermissionEnum.manage_staff,
+      adminUser?.adminGroupsId
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
+    const existingStaffMember = await adminUserRepository.findOneBy({ id });
+
+    if (!existingStaffMember) {
+      res.status(404).json({
+        status: "failed",
+        message: "Staff member not found.",
+      });
+      return;
+    }
+
+    const existingGroup = await permissionGroupRepository.findOneBy({
+      id: groupId,
+    });
+
+    if (!existingGroup) {
+      res.status(400).json({
+        status: "failed",
+        message: "Admin group not found.",
+      });
+      return;
+    }
+
+    if (existingGroup.name === "super_admin") {
+      res.status(400).json({
+        status: "failed",
+        message: "Cannot change staff member to super_admin group.",
+      });
+      return;
+    }
+
+    existingStaffMember.adminGroupsId = groupId;
+    await adminUserRepository.save(existingStaffMember);
+
+    res.status(200).json({
+      status: "success",
+      message: "Staff member group changed successfully.",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error changing staff member group.",
+    });
+  }
+};
+
+export const deleteStaffMember = async (req: Request, res: Response) => {
+  try {
+    const { id, user }: { id: number; user: User } = req.body;
+
+    if (!id) {
+      res.status(400).json({
+        status: "failed",
+        message: "id is required.",
+      });
+      return;
+    }
+
+    const adminUser = await adminUserRepository.findOne({
+      where: { id: user.userId },
+    });
+
+    if (!adminUser) {
+      res.status(404).json({
+        status: "failed",
+        message: "User not found.",
+      });
+      return;
+    }
+
+    const hasPermission = await checkActionPermission(
+      PermissionEnum.manage_staff,
+      adminUser?.adminGroupsId
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        status: "failed",
+        message: "You don't have permission to perform this action.",
+      });
+      return;
+    }
+
+    const existingStaffMember = await adminUserRepository.findOne({
+      where: { id: id },
+      relations: ["AdminGroups"],
+    });
+
+    if (!existingStaffMember) {
+      res.status(404).json({
+        status: "failed",
+        message: "Staff member not found.",
+      });
+      return;
+    }
+
+    if (existingStaffMember.AdminGroups.name === "super_admin") {
+      res.status(400).json({
+        status: "failed",
+        message: "Cannot delete super_admin.",
+      });
+      return;
+    }
+
+    await adminUserRepository.remove(existingStaffMember);
+
+    res.status(200).json({
+      status: "success",
+      message: "Staff member deleted successfully.",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error deleting staff member.",
+    });
+  }
+};
