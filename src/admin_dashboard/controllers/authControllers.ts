@@ -3,13 +3,14 @@ import {
   adminUserRepository,
   permissionGroupRepository,
 } from "../../repositories/repositories.js";
-import { comparePasswords, hashPassword } from "../../utils/password.js";
 import {
   generateAdminAccessToken,
   generateAdminCSRFToken,
   generateAdminRefreshToken,
   generateAdminSessionId,
 } from "../../utils/adminTokens.js";
+import { compareAdminPasswords, hashAdminPassword } from "../utils/password.js";
+import { decryptAdminEmail } from "../utils/encryptToken.js";
 
 const sameSite: any = process.env.SAME_SITE_COOKIES;
 const secureCookie: any = process.env.SECURE_COOKIES;
@@ -39,7 +40,7 @@ export const addSuperAdmin = async (
       throw new Error("Staff email already exists.");
     }
 
-    const hashedPassword = await hashPassword(req.body.password);
+    const hashedPassword = await hashAdminPassword(req.body.password);
 
     const super_admin = await permissionGroupRepository.findOneBy({
       name: "super_admin",
@@ -112,7 +113,7 @@ export const loginStaff = async (
     }
 
     const hashedPassword = staffMember.password;
-    const isPasswordMatch = await comparePasswords(
+    const isPasswordMatch = await compareAdminPasswords(
       req.body.password,
       hashedPassword
     );
@@ -168,6 +169,121 @@ export const loginStaff = async (
     res.status(500).json({
       status: "failed",
       message: error?.message || "Error Logging to your account.",
+    });
+  }
+};
+
+export const verifyStaffEmail = async (req: Request, res: Response) => {
+  try {
+    const { token, signature }: { token: string; signature: string } = req.body;
+
+    if (!token || !signature) {
+      res.status(400).json({
+        status: "failed",
+        message: "token and signature are required.",
+      });
+      return;
+    }
+
+    const email = decryptAdminEmail(token, signature);
+    if (!email) {
+      res.status(400).json({
+        status: "failed",
+        message: "Invalid or expired link.",
+      });
+      return;
+    }
+
+    const staffMember = await adminUserRepository.findOneBy({ email });
+
+    if (!staffMember) {
+      res.status(404).json({
+        status: "failed",
+        message: "Staff member not found.",
+      });
+      return;
+    }
+
+    if (staffMember.lastOtpSent !== token) {
+      res.status(500).json({
+        status: "failed",
+        message: "Invalid Token.",
+      });
+      return;
+    }
+
+    if (staffMember.otpExpiry && staffMember.otpExpiry < new Date()) {
+      res.status(500).json({
+        status: "failed",
+        message: "Token Expired.",
+      });
+      return;
+    }
+
+    staffMember.isVerified = true;
+    staffMember.lastOtpSent = null;
+    staffMember.lastOtpSentTime = null;
+    staffMember.otpExpiry = null;
+
+    await adminUserRepository.save(staffMember);
+
+    res.status(200).json({
+      status: "success",
+      message: "Email verified successfully.",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error verifying email.",
+    });
+  }
+};
+
+export const setStaffPassword = async (req: Request, res: Response) => {
+  try {
+    const { id, password }: { id: number; password: string } = req.body;
+
+    const existingStaffMember = await adminUserRepository.findOneBy({
+      id: id,
+    });
+
+    if (!existingStaffMember) {
+      res.status(400).json({
+        status: "failed",
+        message: "Staff member not found.",
+      });
+      return;
+    }
+    if (!existingStaffMember.isVerified) {
+      res.status(400).json({
+        status: "failed",
+        message: "Staff member email is not verified.",
+      });
+      return;
+    }
+
+    if (password.length < 8) {
+      res.status(400).json({
+        status: "failed",
+        message: "Password must be at least 8 characters long.",
+      });
+      return;
+    }
+
+    const hashedPassword = await hashAdminPassword(password);
+
+    existingStaffMember.password = hashedPassword;
+    existingStaffMember.isActive = true;
+    await adminUserRepository.save(existingStaffMember);
+
+    res.status(200).json({
+      status: "success",
+      message: "Password set successfully.",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: "failed",
+      message: error?.message || "Error setting password.",
     });
   }
 };

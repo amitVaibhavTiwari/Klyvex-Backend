@@ -7,7 +7,7 @@ import {
   productRepository,
   productVariantRepository,
 } from "../../repositories/repositories.js";
-import { checkActionPermission } from "../../utils/checkPermission.js";
+import { checkActionPermission } from "../utils/checkPermission.js";
 
 export const addNewProductCategory = async (
   req: Request,

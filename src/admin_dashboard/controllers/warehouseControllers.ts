@@ -5,7 +5,7 @@ import {
   warehouseRepository,
   warehouseStockRepository,
 } from "../../repositories/repositories.js";
-import { checkActionPermission } from "../../utils/checkPermission.js";
+import { checkActionPermission } from "../utils/checkPermission.js";
 import { WarehouseStock } from "../../entities/WarehouseStock.js";
 
 export const addWarehouse = async (

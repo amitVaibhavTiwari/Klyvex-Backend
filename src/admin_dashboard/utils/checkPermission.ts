@@ -1,4 +1,4 @@
-import { AppDataSource } from "../dataSource/dataSource.js";
+import { AppDataSource } from "../../dataSource/dataSource.js";
 
 export const checkActionPermission = async (
   action: string,

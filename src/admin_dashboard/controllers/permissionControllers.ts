@@ -4,12 +4,12 @@ import {
   permissionRepository,
 } from "../../repositories/repositories.js";
 import { Request, Response } from "express";
-import { checkActionPermission } from "../../utils/checkPermission.js";
+import { checkActionPermission } from "../utils/checkPermission.js";
 import { User } from "../Types.js";
 import { AppDataSource } from "../../dataSource/dataSource.js";
 import { AdminPermissions } from "../../entities/AdminPermissions.js";
 import { AdminGroups } from "../../entities/AdminGroups.js";
-import { PermissionEnum } from "../Permissions.js";
+import { PermissionEnum } from "../utils/Permissions.js";
 
 export const createPermission = async (
   req: Request,
@@ -28,7 +28,6 @@ export const createPermission = async (
 
     const adminUser = await adminUserRepository.findOne({
       where: { id: user.userId },
-      relations: ["AdminGroups"],
     });
 
     if (!adminUser) {
@@ -41,7 +40,7 @@ export const createPermission = async (
 
     const hasPermission = await checkActionPermission(
       PermissionEnum.manage_permissions,
-      adminUser?.AdminGroups?.id
+      adminUser?.adminGroupsId
     );
 
     if (!hasPermission) {
@@ -123,7 +122,6 @@ export const createPermissionGroup = async (
 
     const adminUser = await adminUserRepository.findOne({
       where: { id: user.userId },
-      relations: ["AdminGroups"],
     });
 
     if (!adminUser) {
@@ -136,7 +134,7 @@ export const createPermissionGroup = async (
 
     const hasPermission = checkActionPermission(
       PermissionEnum.manage_permissions,
-      adminUser?.AdminGroups?.id
+      adminUser?.adminGroupsId
     );
 
     if (!hasPermission) {
@@ -194,7 +192,6 @@ export const addPermissionToGroup = async (req: Request, res: Response) => {
 
     const adminUser = await adminUserRepository.findOne({
       where: { id: user.userId },
-      relations: ["AdminGroups"],
     });
 
     if (!adminUser) {
@@ -207,7 +204,7 @@ export const addPermissionToGroup = async (req: Request, res: Response) => {
 
     const hasPermission = checkActionPermission(
       PermissionEnum.manage_permissions,
-      adminUser?.AdminGroups?.id
+      adminUser?.adminGroupsId
     );
 
     if (!hasPermission) {
@@ -266,7 +263,6 @@ export const deletePermissionFromGroup = async (
 
     const adminUser = await adminUserRepository.findOne({
       where: { id: user.userId },
-      relations: ["AdminGroups"],
     });
 
     if (!adminUser) {
@@ -279,7 +275,7 @@ export const deletePermissionFromGroup = async (
 
     const hasPermission = checkActionPermission(
       PermissionEnum.manage_permissions,
-      adminUser?.AdminGroups?.id
+      adminUser?.adminGroupsId
     );
 
     if (!hasPermission) {
