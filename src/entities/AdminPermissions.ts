@@ -4,7 +4,6 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
   ManyToMany,
 } from "typeorm";
 import { type Relation } from "typeorm";

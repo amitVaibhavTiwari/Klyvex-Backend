@@ -1,4 +1,5 @@
 import express from "express";
+import "express-async-errors"; 
 import productRouter from "./routes/productRoutes.js";
 import permissionRouter from "./routes/permissionRoutes.js";
 import warehouseRouter from "./routes/warehouseRoutes.js";
@@ -6,6 +7,7 @@ import { adminAuthMiddleware } from "./middleware/AdminAuth.js";
 import { adminCSRFMiddleware } from "./middleware/CSRFMiddleware.js";
 import authRouter from "./routes/authRoutes.js";
 import staffRouter from "./routes/staffRoutes.js";
+import { errorHandler } from "./utils/errorHandler.js";
 
 const adminRouter = express.Router();
 
@@ -34,5 +36,7 @@ adminRouter.use(
   [adminAuthMiddleware, adminCSRFMiddleware],
   warehouseRouter
 );
+
+adminRouter.use(errorHandler);
 
 export default adminRouter;

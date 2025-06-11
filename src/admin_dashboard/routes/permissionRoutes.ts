@@ -1,5 +1,5 @@
 import express from "express";
-import { addNewProduct } from "../controllers/productControllers.js";
+import { addNewProduct } from "../controllers/ProductControllers/ProductControllers.js";
 import {
   addPermissionToGroup,
   createPermission,
@@ -8,7 +8,7 @@ import {
   getAllPermissions,
   getPermissionGroups,
   getSinglePermissionGroup,
-} from "../controllers/permissionControllers.js";
+} from "../controllers/PermissionControllers/PermissionControllers.js";
 
 const permissionRouter = express.Router();
 

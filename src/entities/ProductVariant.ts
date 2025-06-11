@@ -79,10 +79,6 @@ export class ProductVariant {
   @Column({ nullable: true })
   color: string;
 
-  @Field()
-  @Column({ default: false })
-  allowBackorder: boolean;
-
   @Field(() => [ProductImage])
   @OneToMany(() => ProductImage, (ProductImage) => ProductImage.ProductVariant)
   ProductImage: Relation<ProductImage[]>;

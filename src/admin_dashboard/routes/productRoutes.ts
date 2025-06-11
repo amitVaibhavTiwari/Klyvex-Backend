@@ -4,7 +4,7 @@ import {
   addNewProductCategory,
   addNewVariantToProduct,
   addProductToCategory,
-} from "../controllers/productControllers.js";
+} from "../controllers/ProductControllers/ProductControllers.js";
 
 const productRouter = express.Router();
 

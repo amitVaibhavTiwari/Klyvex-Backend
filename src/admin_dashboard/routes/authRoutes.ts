@@ -4,7 +4,7 @@ import {
   loginStaff,
   setStaffPassword,
   verifyStaffEmail,
-} from "../controllers/authControllers.js";
+} from "../controllers/AuthControllers/AuthControllers.js";
 
 const authRouter = express.Router();
 

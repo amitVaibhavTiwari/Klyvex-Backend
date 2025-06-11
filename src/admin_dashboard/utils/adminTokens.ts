@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { adminUserRepository } from "../repositories/repositories.js";
+import { adminUserRepository } from "../../repositories/repositories.js";
 if (!process.env.ADMIN_ACCESS_TOKEN_SECRET) {
   throw new Error("ADMIN_ACCESS_TOKEN_SECRET is not defined in dotenv");
 }

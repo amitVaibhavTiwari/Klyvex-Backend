@@ -5,7 +5,7 @@ import {
   deleteStaffMember,
   getSelfDetails,
   sendStaffInvitationLink,
-} from "../controllers/staffControllers.js";
+} from "../controllers/StaffControllers/StaffControllers.js";
 
 const staffRouter = express.Router();
 

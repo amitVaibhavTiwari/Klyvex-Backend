@@ -7,7 +7,6 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { buildSchema } from "type-graphql";
 import { AppDataSource } from "./dataSource/dataSource.js";
 import { AccountUserResolver } from "./resolvers/UserResolver/AccountUserResolver.js";
-import { CsrfMiddleware } from "./middlewares/CsrfMiddleware.js";
 import adminRouter from "./admin_dashboard/index.js";
 import { ProductCategoryResolver } from "./resolvers/ProductCategoryResolver/ProductCategoryResolver.js";
 import { ProductResolver } from "./resolvers/ProductResolver/ProductResolver.js";
@@ -41,13 +40,13 @@ const startGraphQlServer = async () => {
     const app = express();
 
     app.use(cookieParser());
-    app.use(CsrfMiddleware); //  for security against csrf attacks [it works only in production environment.].
+    // app.use(CsrfMiddleware); //  for security against csrf attacks [it works only in production environment.].
 
     app.use(
       cors({
         origin: process.env.ALLOWED_ORIGIN,
         // origin: function (origin, callback) {
-        //   callback(null, true); // Allow all origins
+        //   callback(null, true); // allow all origins
         // },
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],

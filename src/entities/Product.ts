@@ -26,6 +26,10 @@ export class Product {
   name: string;
 
   @Field()
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Field()
   @Column()
   @Length(1, 200)
   slug: string;

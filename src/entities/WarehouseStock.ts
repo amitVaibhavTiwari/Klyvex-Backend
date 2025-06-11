@@ -52,7 +52,7 @@ export class WarehouseStock {
 
   @Field()
   @Column({ default: false })
-  isActive: boolean;
+  allowBackorder: boolean;
 
   @Field()
   @Column({ default: 0 })

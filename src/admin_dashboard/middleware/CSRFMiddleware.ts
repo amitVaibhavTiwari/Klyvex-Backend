@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import {
   generateAdminCSRFToken,
   generateAdminSessionId,
-} from "../../utils/adminTokens.js";
+} from "../utils/adminTokens.js";
 import crypto from "crypto";
 
 if (!process.env.ADMIN_CSRF_TOKEN_SECRET) {

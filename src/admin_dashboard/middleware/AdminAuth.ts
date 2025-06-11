@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { generateAdminAccessToken } from "../../utils/adminTokens.js";
+import { generateAdminAccessToken } from "../utils/adminTokens.js";
 import { adminUserRepository } from "../../repositories/repositories.js";
 
 if (!process.env.ADMIN_ACCESS_TOKEN_SECRET) {

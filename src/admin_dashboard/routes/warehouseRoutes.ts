@@ -3,7 +3,7 @@ import {
   addProductToWarehouse,
   addWarehouse,
   editWarehouseStock,
-} from "../controllers/warehouseControllers.js";
+} from "../controllers/WarehouseControllers/WarehouseControllers.js";
 
 const warehouseRouter = express.Router();
 
