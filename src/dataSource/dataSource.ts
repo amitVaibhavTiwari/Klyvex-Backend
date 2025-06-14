@@ -14,6 +14,7 @@ import { WarehouseStock } from "../entities/WarehouseStock.js";
 import { AdminUser } from "../entities/AdminUser.js";
 import { AdminGroups } from "../entities/AdminGroups.js";
 import { AdminPermissions } from "../entities/AdminPermissions.js";
+import { ProductType } from "../entities/ProductType.js";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -26,7 +27,7 @@ export const AppDataSource = new DataSource({
   // below one is to synchronize the database with the entities. Don't use in production, use when someone is starting project with their own DB withour running migrations.
   synchronize: false,
   logging: false,
-  cache:false,
+  cache: false,
   entities: [
     AdminUser,
     AdminGroups,
@@ -42,6 +43,7 @@ export const AppDataSource = new DataSource({
     ProductImage,
     Warehouse,
     WarehouseStock,
+    ProductType,
   ],
   migrations: ["dist/migrations/**/*.js"], // Use .js files in dist folder
 });

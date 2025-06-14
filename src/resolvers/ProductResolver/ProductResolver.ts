@@ -161,7 +161,8 @@ export class ProductResolver {
     @Arg("warehouseId") warehouseId: number,
     @Arg("categoryId", { nullable: true }) categoryId?: number,
     @Arg("limit", { nullable: true }) limit?: number,
-    @Arg("page", { nullable: true }) page?: number
+    @Arg("page", { nullable: true }) page?: number,
+    @Arg("isDefault", { nullable: true }) isDefault?: boolean
   ): Promise<Product[]> {
     const take = limit ?? 20;
     const skip = limit && page ? (page - 1) * limit : 0;
@@ -191,6 +192,10 @@ export class ProductResolver {
         .innerJoin("product.categories", "relation")
         .innerJoin("relation.category", "category")
         .andWhere("category.id = :categoryId", { categoryId });
+    }
+    // Add isDefault filtering if requested
+    if (isDefault !== undefined) {
+      query.andWhere("variant.isDefault = :isDefault", { isDefault });
     }
 
     // ProductVariant fields if requested by client

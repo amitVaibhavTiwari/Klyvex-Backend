@@ -4,6 +4,7 @@ import {
   productCategoryRepository,
   productImageRepository,
   productRepository,
+  productTypeRepository,
   productVariantRepository,
   warehouseStockRepository,
 } from "../../../repositories/repositories.js";
@@ -11,6 +12,7 @@ import { PermissionEnum } from "../../utils/Permissions.js";
 import {
   AddNewProductCategoryDTO,
   AddNewProductDTO,
+  AddNewProductTypeDTO,
   AddNewVariantToProductDTO,
   AddProductToCategoryDTO,
   DeleteProductCategoryDTO,
@@ -31,6 +33,7 @@ export const addNewProductCategory = async (
     description,
     isActive,
     metaData,
+
     user,
     parentCategoryId,
   } = await validateDTO(AddNewProductCategoryDTO, req.body);
@@ -88,17 +91,14 @@ export const addNewProduct = async (
     slug,
     price,
     categoryId,
-    productMetaData,
-    variantMetaData,
+    productAttributes,
+    variantAttributes,
     tax,
+    sku,
     description,
-    size,
-    color,
-    height,
-    width,
-    weight,
-    length,
+    productTypeId,
     images,
+    thumbnail,
     user,
   } = await validateDTO(AddNewProductDTO, req.body);
 
@@ -116,27 +116,36 @@ export const addNewProduct = async (
     return;
   }
 
+  const existingVariant = await productVariantRepository.find({
+    where: { sku: sku },
+  });
+
+  if (existingVariant.length > 0) {
+    res.status(409).json({
+      status: "failed",
+      message: "Variant with this sku already exists.",
+    });
+    return;
+  }
+
   await productRepository.manager.transaction(
     async (transactionalEntityManager) => {
       const newProduct = productRepository.create({
         name,
         slug,
-        metaData: productMetaData,
+        thumbnail: thumbnail,
+        productTypeId,
+        description,
+        attributes: productAttributes,
       });
       const savedProduct = await transactionalEntityManager.save(newProduct);
 
       const newVariant = productVariantRepository.create({
         price,
-        metaData: variantMetaData,
+        sku,
+        attributes: variantAttributes,
         isDefault: true,
         tax,
-        description,
-        size,
-        color,
-        height,
-        width,
-        weight,
-        length,
         productId: savedProduct.id,
       });
 
@@ -297,107 +306,107 @@ export const deleteProductFromCategory = async (
   });
 };
 
-export const addNewVariantToProduct = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const {
-    productId,
-    price,
-    metadata,
-    tax,
-    description,
-    size,
-    color,
-    height,
-    width,
-    weight,
-    length,
-    images,
-    user,
-    isDefault,
-  } = await validateDTO(AddNewVariantToProductDTO, req.body);
-  await validateAdminUser(user.userId, PermissionEnum.manage_products);
+// export const addNewVariantToProduct = async (
+//   req: Request,
+//   res: Response
+// ): Promise<void> => {
+//   const {
+//     productId,
+//     price,
+//     metadata,
+//     tax,
+//     description,
+//     size,
+//     color,
+//     height,
+//     width,
+//     weight,
+//     length,
+//     images,
+//     user,
+//     isDefault,
+//   } = await validateDTO(AddNewVariantToProductDTO, req.body);
+//   await validateAdminUser(user.userId, PermissionEnum.manage_products);
 
-  if (
-    !price &&
-    !metadata &&
-    !tax &&
-    !description &&
-    !size &&
-    !color &&
-    !height &&
-    !width &&
-    !weight &&
-    !length
-  ) {
-    res.status(400).json({
-      status: "failed",
-      message: "Nothing to add in variant.",
-    });
-    return;
-  }
+//   if (
+//     !price &&
+//     !metadata &&
+//     !tax &&
+//     !description &&
+//     !size &&
+//     !color &&
+//     !height &&
+//     !width &&
+//     !weight &&
+//     !length
+//   ) {
+//     res.status(400).json({
+//       status: "failed",
+//       message: "Nothing to add in variant.",
+//     });
+//     return;
+//   }
 
-  const product = await productRepository.findOneBy({
-    id: productId,
-  });
+//   const product = await productRepository.findOneBy({
+//     id: productId,
+//   });
 
-  if (!product) {
-    res.status(404).json({
-      status: "failed",
-      message: "Product not found.",
-    });
-    return;
-  }
+//   if (!product) {
+//     res.status(404).json({
+//       status: "failed",
+//       message: "Product not found.",
+//     });
+//     return;
+//   }
 
-  await productVariantRepository.manager.transaction(
-    async (transactionalEntityManager) => {
-      if (isDefault) {
-        //means user wants to make this variant as default, so before that if there's already a default variant, we need to remove that isDefault status from it
-        const existingDefaultVariant = await productVariantRepository.findOne({
-          where: { productId: product.id, isDefault: true },
-        });
-        if (existingDefaultVariant) {
-          existingDefaultVariant.isDefault = false;
-          await transactionalEntityManager.save(existingDefaultVariant);
-        }
-      }
+//   await productVariantRepository.manager.transaction(
+//     async (transactionalEntityManager) => {
+//       if (isDefault) {
+//         //means user wants to make this variant as default, so before that if there's already a default variant, we need to remove that isDefault status from it
+//         const existingDefaultVariant = await productVariantRepository.findOne({
+//           where: { productId: product.id, isDefault: true },
+//         });
+//         if (existingDefaultVariant) {
+//           existingDefaultVariant.isDefault = false;
+//           await transactionalEntityManager.save(existingDefaultVariant);
+//         }
+//       }
 
-      const newVariant = productVariantRepository.create({
-        price: price,
-        metaData: metadata,
-        tax,
-        description,
-        size,
-        color,
-        height,
-        width,
-        isDefault,
-        weight,
-        length,
-        productId: product.id,
-      });
-      const savedVariant = await transactionalEntityManager.save(newVariant);
+//       const newVariant = productVariantRepository.create({
+//         price: price,
+//         metaData: metadata,
+//         tax,
+//         description,
+//         size,
+//         color,
+//         height,
+//         width,
+//         isDefault,
+//         weight,
+//         length,
+//         productId: product.id,
+//       });
+//       const savedVariant = await transactionalEntityManager.save(newVariant);
 
-      if (Array.isArray(images) && images.length > 0) {
-        const imageEntities = images.map((image: string, index: number) =>
-          productImageRepository.create({
-            imageUrl: image,
-            rank: (index + 1).toString(),
-            productId: product.id,
-            productVariantId: savedVariant.id,
-          })
-        );
-        await transactionalEntityManager.save(imageEntities);
-      }
-    }
-  );
+//       if (Array.isArray(images) && images.length > 0) {
+//         const imageEntities = images.map((image: string, index: number) =>
+//           productImageRepository.create({
+//             imageUrl: image,
+//             rank: (index + 1).toString(),
+//             productId: product.id,
+//             productVariantId: savedVariant.id,
+//           })
+//         );
+//         await transactionalEntityManager.save(imageEntities);
+//       }
+//     }
+//   );
 
-  res.status(201).json({
-    status: "success",
-    message: "Product variant added successfully.",
-  });
-};
+//   res.status(201).json({
+//     status: "success",
+//     message: "Product variant added successfully.",
+//   });
+// };
 
 export const deleteVariantFromProduct = async (req: Request, res: Response) => {
   const { variantId, user } = await validateDTO(
@@ -531,5 +540,95 @@ export const deleteProductCategory = async (
   res.status(200).json({
     status: "success",
     message: "Product category deleted successfully.",
+  });
+};
+
+// export const editProductVariant = async (req: Request, res: Response) => {
+//   const {
+//     variantId,
+//     price,
+//     metadata,
+//     tax,
+//     description,
+//     size,
+//     color,
+//     height,
+//     width,
+//     weight,
+//     length,
+//     images,
+//     isDefault,
+//     user,
+//   } = req.body;
+//   //  = await validateDTO(AddNewVariantToProductDTO, req.body);
+//   await validateAdminUser(user.userId, PermissionEnum.manage_products);
+
+//   const productVariant = await productVariantRepository.findOneBy({
+//     id: variantId,
+//   });
+
+//   if (!productVariant) {
+//     res.status(404).json({
+//       status: "failed",
+//       message: "Product variant not found.",
+//     });
+//     return;
+//   }
+
+//   productVariant.price = price || productVariant.price;
+//   productVariant.metaData = metadata || productVariant.metaData;
+//   productVariant.tax = tax || productVariant.tax;
+//   productVariant.description = description || productVariant.description;
+//   productVariant.size = size || productVariant.size;
+//   productVariant.color = color || productVariant.color;
+//   productVariant.height = height || productVariant.height;
+//   productVariant.width = width || productVariant.width;
+//   productVariant.weight = weight || productVariant.weight;
+//   productVariant.length = length || productVariant.length;
+//   productVariant.isDefault = isDefault || productVariant.isDefault;
+
+//   await productVariantRepository.save(productVariant);
+
+//   if (Array.isArray(images) && images.length > 0) {
+//     const imageEntities = images.map((image: string, index: number) =>
+//       productImageRepository.create({
+//         imageUrl: image,
+//         rank: (index + 1).toString(),
+//         productId: productVariant.productId,
+//         productVariantId: variantId,
+//       })
+//     );
+//     await productImageRepository.save(imageEntities);
+//   }
+
+//   res.status(200).json({
+//     status: "success",
+//     message: "Product variant updated successfully.",
+//   });
+// };
+
+export const createProductType = async (req: Request, res: Response) => {
+  const { name, productAttributes, variantAttributes, user } =
+    await validateDTO(AddNewProductTypeDTO, req.body);
+  await validateAdminUser(user.userId, PermissionEnum.manage_products);
+  const existingProductType = await productTypeRepository.findOne({
+    where: { name },
+  });
+  if (existingProductType) {
+    res.status(409).json({
+      status: "failed",
+      message: "Product type with this name already exists.",
+    });
+    return;
+  }
+  const newProductType = productTypeRepository.create({
+    name,
+    productAttributes,
+    variantAttributes,
+  });
+  await productTypeRepository.save(newProductType);
+  res.status(201).json({
+    status: "success",
+    message: "Product type created successfully.",
   });
 };

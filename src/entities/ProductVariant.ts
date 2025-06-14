@@ -10,7 +10,6 @@ import {
 } from "typeorm";
 import { ObjectType, Field, ID } from "type-graphql";
 import { type Relation } from "typeorm";
-import { Length } from "class-validator";
 import { Product } from "./Product.js";
 import { ProductImage } from "./ProductImage.js";
 import { WarehouseStock } from "./WarehouseStock.js";
@@ -26,6 +25,10 @@ export class ProductVariant {
   @Field()
   @Column("uuid")
   productId: string;
+
+  @Field()
+  @Column()
+  sku: string;
 
   @Field(() => Product)
   @ManyToOne(() => Product, (Product) => Product.ProductVariant, {
@@ -50,34 +53,9 @@ export class ProductVariant {
   @Column("jsonb", { nullable: true })
   tax: object;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  @Length(1, 2000)
-  description: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  size: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  height: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  width: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  length: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  weight: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  color: string;
+  @Field(() => GraphQLJSON, { nullable: true })
+  @Column("jsonb", { nullable: true })
+  attributes: object;
 
   @Field(() => [ProductImage])
   @OneToMany(() => ProductImage, (ProductImage) => ProductImage.ProductVariant)
@@ -89,10 +67,6 @@ export class ProductVariant {
     (WarehouseStock) => WarehouseStock.ProductVariant
   )
   WarehouseStock: Relation<WarehouseStock[]>;
-
-  @Field(() => GraphQLJSON, { nullable: true })
-  @Column("jsonb", { nullable: true })
-  metaData: object;
 
   @Field()
   @CreateDateColumn({ type: "timestamp" })

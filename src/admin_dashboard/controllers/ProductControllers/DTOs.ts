@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsArray,
   IsNotEmpty,
-  Length,
   IsObject,
   IsBoolean,
 } from "class-validator";
@@ -17,22 +16,35 @@ export class AddNewProductDTO {
 
   @IsString()
   @IsNotEmpty()
+  sku: string;
+
+  @IsString()
+  @IsNotEmpty()
   slug: string;
 
+  @IsString()
+  @IsOptional()
+  thumbnail?: string;
+
   @IsObject()
+  @IsNotEmpty()
   price: Record<string, any>;
 
   @IsOptional()
   @IsString()
   categoryId?: number;
 
-  @IsOptional()
-  @IsObject()
-  productMetaData?: Record<string, any>;
+  @IsNotEmpty()
+  @IsNumber()
+  productTypeId: number;
 
   @IsOptional()
   @IsObject()
-  variantMetaData?: Record<string, any>;
+  productAttributes?: Record<string, any>;
+
+  @IsOptional()
+  @IsObject()
+  variantAttributes?: Record<string, any>;
 
   @IsOptional()
   @IsObject()
@@ -40,32 +52,7 @@ export class AddNewProductDTO {
 
   @IsOptional()
   @IsString()
-  @Length(20, 2000)
   description?: string;
-
-  @IsOptional()
-  @IsString()
-  size?: string;
-
-  @IsOptional()
-  @IsString()
-  color?: string;
-
-  @IsOptional()
-  @IsNumber()
-  height?: string;
-
-  @IsOptional()
-  @IsNumber()
-  width?: string;
-
-  @IsOptional()
-  @IsNumber()
-  weight?: string;
-
-  @IsOptional()
-  @IsNumber()
-  length?: string;
 
   @IsOptional()
   @IsArray()
@@ -234,6 +221,23 @@ export class DeleteProductCategoryDTO {
   @IsNotEmpty()
   @IsNumber()
   categoryId: number;
+
+  @IsNotEmpty()
+  user: User;
+}
+
+export class AddNewProductTypeDTO {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsOptional()
+  @IsObject()
+  productAttributes?: Record<string, any>;
+
+  @IsOptional()
+  @IsObject()
+  variantAttributes?: Record<string, any>;
 
   @IsNotEmpty()
   user: User;
