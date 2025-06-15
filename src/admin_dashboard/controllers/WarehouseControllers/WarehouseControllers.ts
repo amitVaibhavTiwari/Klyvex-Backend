@@ -72,6 +72,15 @@ export const addProductToWarehouse = async (req: Request, res: Response) => {
     });
     return;
   }
+
+  if (targetWarehouse.isActive === false) {
+    res.status(400).json({
+      status: "failed",
+      message: "Cannot add products to an inactive warehouse.",
+    });
+    return;
+  }
+
   const targetProduct = await productVariantRepository.findOneBy({
     id: variantId,
   });
@@ -102,7 +111,7 @@ export const addProductToWarehouse = async (req: Request, res: Response) => {
     productVariantId: variantId,
     warehouseId: warehouseId,
     metaData: metadata,
-    stockQuantity: stockQuantity,
+    stockQuantity: stockQuantity ? stockQuantity : 0,
   });
   await warehouseStockRepository.save(newStock);
 
@@ -113,10 +122,14 @@ export const addProductToWarehouse = async (req: Request, res: Response) => {
 };
 
 export const editWarehouseStock = async (req: Request, res: Response) => {
-  const { stockId, data, user } = await validateDTO(
-    editWarehouseStockDTO,
-    req.body
-  );
+  const {
+    stockId,
+    stockQuantity,
+    reservedQuantity,
+    metadata,
+    allowBackorder,
+    user,
+  } = await validateDTO(editWarehouseStockDTO, req.body);
 
   const adminUser = await adminUserRepository.findOne({
     where: { id: user.userId },
@@ -160,11 +173,11 @@ export const editWarehouseStock = async (req: Request, res: Response) => {
     return;
   }
 
-  Object.keys(data).forEach((key) => {
-    if (key in targetStock) {
-      (targetStock as any)[key] = data[key];
-    }
-  });
+  if (stockQuantity) targetStock.stockQuantity = stockQuantity;
+  if (metadata) targetStock.metaData = metadata;
+  if (allowBackorder == false || allowBackorder == true)
+    targetStock.allowBackorder = allowBackorder;
+  if (reservedQuantity) targetStock.reservedQuantity = reservedQuantity;
 
   await warehouseStockRepository.save(targetStock);
 
@@ -201,7 +214,7 @@ export const deleteWarehouseStock = async (req: Request, res: Response) => {
   });
 };
 
-// wil use in future
+// will use in future
 // export const getWarehouseStocks = async (req: Request, res: Response) => {
 //   try {
 //     const { warehouseId, user } = req.body;

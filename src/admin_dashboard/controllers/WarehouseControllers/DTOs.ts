@@ -59,9 +59,21 @@ export class editWarehouseStockDTO {
   @IsNotEmpty()
   stockId: number;
 
+  @IsNumber()
+  @IsOptional()
+  stockQuantity?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  allowBackorder?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  reservedQuantity?: number;
+
   @IsObject()
-  @IsNotEmpty()
-  data: Record<string, any>;
+  @IsOptional()
+  metadata?: Record<string, any>;
 
   @IsNotEmpty()
   user: User;

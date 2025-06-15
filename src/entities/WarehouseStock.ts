@@ -56,7 +56,7 @@ export class WarehouseStock {
 
   @Field()
   @Column({ default: 0 })
-  reservedQuantity: string;
+  reservedQuantity: number;
 
   @Field(() => GraphQLJSON, { nullable: true })
   @Column("jsonb", { nullable: true })

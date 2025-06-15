@@ -31,7 +31,7 @@ export class AddNewProductDTO {
   price: Record<string, any>;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   categoryId?: number;
 
   @IsNotEmpty()
@@ -147,45 +147,21 @@ export class AddNewVariantToProductDTO {
   @IsString()
   productId: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsObject()
-  price?: Record<string, any>;
+  price: Record<string, any>;
 
   @IsOptional()
   @IsObject()
-  metadata?: Record<string, any>;
+  attributes?: Record<string, any>;
 
   @IsOptional()
   @IsObject()
   tax?: Record<string, any>;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsString()
-  size?: string;
-
-  @IsOptional()
-  @IsString()
-  color?: string;
-
-  @IsOptional()
-  @IsString()
-  height?: string;
-
-  @IsOptional()
-  @IsString()
-  width?: string;
-
-  @IsOptional()
-  @IsString()
-  weight?: string;
-
-  @IsOptional()
-  @IsString()
-  length?: string;
+  sku: string;
 
   @IsOptional()
   @IsArray()
@@ -238,6 +214,35 @@ export class AddNewProductTypeDTO {
   @IsOptional()
   @IsObject()
   variantAttributes?: Record<string, any>;
+
+  @IsNotEmpty()
+  user: User;
+}
+
+export class EditProductVariantDTO {
+  @IsNotEmpty()
+  @IsString()
+  variantId: string;
+
+  @IsOptional()
+  @IsObject()
+  price?: Record<string, any>;
+
+  @IsOptional()
+  @IsObject()
+  attributes?: Record<string, any>;
+
+  @IsOptional()
+  @IsObject()
+  tax?: Record<string, any>;
+
+  @IsNotEmpty()
+  @IsString()
+  sku: string;
+
+  @IsOptional()
+  @IsArray()
+  images?: string[];
 
   @IsNotEmpty()
   user: User;
