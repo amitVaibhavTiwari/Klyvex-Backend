@@ -45,10 +45,6 @@ export class ProductCategory {
   metaData: object;
 
   @Field()
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Field()
   @Column({ type: "int", nullable: true })
   parentCategoryId: number;
 

@@ -10,6 +10,7 @@ import { AccountUserResolver } from "./resolvers/UserResolver/AccountUserResolve
 import adminRouter from "./admin_dashboard/index.js";
 import { ProductCategoryResolver } from "./resolvers/ProductCategoryResolver/ProductCategoryResolver.js";
 import { ProductResolver } from "./resolvers/ProductResolver/ProductResolver.js";
+import { ShopMetaResolver } from "./resolvers/ShopMeta/ShopMetaResolvers.js";
 
 const PORT = process.env.PORT || 4000;
 
@@ -27,6 +28,7 @@ const startGraphQlServer = async () => {
         AccountUserResolver,
         ProductCategoryResolver,
         ProductResolver,
+        ShopMetaResolver,
       ],
       validate: true,
     });

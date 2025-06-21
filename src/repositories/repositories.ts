@@ -18,6 +18,7 @@ import { ProductImage } from "../entities/ProductImage.js";
 import { Warehouse } from "../entities/Warehouse.js";
 import { WarehouseStock } from "../entities/WarehouseStock.js";
 import { ProductType } from "../entities/ProductType.js";
+import { ShopMeta } from "../entities/ShopMeta.js";
 
 export const bookRepository = AppDataSource.getRepository(Books);
 export const librarianRepository = AppDataSource.getRepository(Librarians);
@@ -46,3 +47,4 @@ export const warehouseRepository = AppDataSource.getRepository(Warehouse);
 export const warehouseStockRepository =
   AppDataSource.getRepository(WarehouseStock);
 export const productTypeRepository = AppDataSource.getRepository(ProductType);
+export const shopMetaRepository = AppDataSource.getRepository(ShopMeta);

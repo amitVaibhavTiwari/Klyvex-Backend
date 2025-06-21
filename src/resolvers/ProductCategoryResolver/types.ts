@@ -21,9 +21,6 @@ class Categories {
   @Field(() => GraphQLJSON, { nullable: true })
   metaData: object;
 
-  @Field()
-  isActive: boolean;
-
   @Field({ nullable: true })
   deletedAt: Date;
 

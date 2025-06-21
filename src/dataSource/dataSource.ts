@@ -15,6 +15,7 @@ import { AdminUser } from "../entities/AdminUser.js";
 import { AdminGroups } from "../entities/AdminGroups.js";
 import { AdminPermissions } from "../entities/AdminPermissions.js";
 import { ProductType } from "../entities/ProductType.js";
+import { ShopMeta } from "../entities/ShopMeta.js";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -44,6 +45,7 @@ export const AppDataSource = new DataSource({
     Warehouse,
     WarehouseStock,
     ProductType,
+    ShopMeta
   ],
   migrations: ["dist/migrations/**/*.js"], // Use .js files in dist folder
 });

@@ -1,242 +1,427 @@
 import { Resolver, Query, Arg, Info } from "type-graphql";
-import {
-  productRepository,
-  productVariantRepository,
-} from "../../repositories/repositories.js";
+import { productRepository } from "../../repositories/repositories.js";
 import { Product } from "../../entities/Product.js";
 import {
-  GetAllProductsForCategoryResponse,
-  getSingleProductResponse,
+  GetAllProductsResponse,
+  GetFeaturedProductsResponse,
+  GetProductBySlugResponse,
+  ProductSortEnum,
 } from "./types.js";
 import type { GraphQLResolveInfo } from "graphql";
 import graphqlFields from "graphql-fields";
-
-function getSelectedFields(
-  fields: Record<string, any>,
-  alias: string,
-  excludeRelations: boolean = false
-): Record<string, string> {
-  const selected: Record<string, string> = {};
-
-  // 🔧 ALWAYS include the primary key for entity identification
-  selected[`${alias}_id`] = `${alias}.id`;
-
-  for (const key in fields) {
-    const value = fields[key];
-
-    // Skip relation fields when excludeRelations is true
-    if (
-      excludeRelations &&
-      value &&
-      typeof value === "object" &&
-      Object.keys(value).length > 0
-    ) {
-      continue;
-    }
-
-    // This is a scalar field (leaf node)
-    if (
-      !value ||
-      (typeof value === "object" && Object.keys(value).length === 0)
-    ) {
-      // Don't duplicate the id field
-      if (key !== "id") {
-        selected[`${alias}_${key}`] = `${alias}.${key}`;
-      }
-    }
-  }
-
-  return selected;
-}
+import { GraphQLJSONObject } from "graphql-type-json";
+import { getSelectedFields } from "../../utils/getSelectedFields.js";
 
 @Resolver(Product)
 export class ProductResolver {
-  // @Query(() => GetAllProductsForCategoryResponse, { nullable: true })
-  // async getAllProductsForCategory(
-  //   @Arg("categoryId") categoryId: number,
-  //   @Arg("limit", { nullable: true }) limit: number,
-  //   @Arg("page", { nullable: true }) page: number,
-  //   @Arg("warehouseId") warehouseId: number
-  // ): Promise<GetAllProductsForCategoryResponse> {
-  //   try {
-  //     const take = limit ?? undefined;
-  //     const skip = limit && page ? (page - 1) * limit : undefined;
-
-  //     const query = productRepository
-  //       .createQueryBuilder("product")
-  //       .innerJoin("product.categories", "relation")
-  //       .innerJoin("relation.category", "category")
-  //       .innerJoin("product.ProductVariant", "variant")
-  //       .innerJoin("variant.WarehouseStock", "stock")
-  //       .where("category.id = :categoryId", { categoryId })
-  //       .andWhere("stock.Warehouse.id = :warehouseId", { warehouseId })
-  //       .andWhere("stock.stockQuantity > 0")
-  //       //selecting the variants that have stock in the specified warehouse
-  //       .leftJoinAndSelect(
-  //         "product.ProductVariant",
-  //         "filteredVariant",
-  //         "filteredVariant.id = variant.id"
-  //       )
-  //       // Join and select the warehouse stock for those filtered variants
-  //       .leftJoinAndSelect(
-  //         "filteredVariant.WarehouseStock",
-  //         "filteredStock",
-  //         "filteredStock.Warehouse.id = :warehouseId AND filteredStock.stockQuantity > 0",
-  //         { warehouseId }
-  //       )
-  //       // Join and select the images for the filtered variants
-  //       .leftJoinAndSelect("filteredVariant.ProductImage", "variantImage")
-  //       .take(take)
-  //       .skip(skip);
-
-  //     const products = await query.getMany();
-
-  //     return {
-  //       products: products,
-  //     };
-  //   } catch (error) {
-  //     return {
-  //       error:
-  //         error instanceof Error ? error.message : "Internal Server Error.",
-  //     };
-  //   }
-  // }
-
-  // @Query(() => getSingleProductResponse, { nullable: true })
-  // async getSingleProduct(
-  //   @Arg("productId") productId: string,
-  //   @Arg("warehouseId") warehouseId: number
-  // ): Promise<getSingleProductResponse> {
-  //   try {
-  //     // getting the product
-  //     const product = await productRepository
-  //       .createQueryBuilder("product")
-  //       .where("product.id = :productId", { productId })
-  //       .leftJoinAndSelect("product.categories", "categoryRelation")
-  //       .leftJoinAndSelect("categoryRelation.category", "category")
-  //       .getOne();
-
-  //     if (!product) {
-  //       return {
-  //         error: "Product not found.",
-  //       };
-  //     }
-
-  //     // getting the variants with stock in the specified warehouse
-  //     const variantsWithStock = await productVariantRepository
-  //       .createQueryBuilder("variant")
-  //       .where("variant.Product = :productId", { productId })
-  //       .innerJoin(
-  //         "variant.WarehouseStock",
-  //         "stock",
-  //         "stock.Warehouse.id = :warehouseId AND stock.stockQuantity > 0",
-  //         { warehouseId }
-  //       )
-  //       .leftJoinAndSelect(
-  //         "variant.WarehouseStock",
-  //         "fullStock",
-  //         "fullStock.Warehouse.id = :warehouseId",
-  //         { warehouseId }
-  //       )
-  //       .leftJoinAndSelect("variant.ProductImage", "variantImage")
-  //       .getMany();
-
-  //     // Assign the filtered variants to the product
-  //     product.ProductVariant = variantsWithStock;
-
-  //     return {
-  //       product: product,
-  //     };
-  //   } catch (error) {
-  //     return {
-  //       error:
-  //         error instanceof Error ? error.message : "Internal Server Error.",
-  //     };
-  //   }
-  // }
-
-  @Query(() => [Product], { nullable: true })
+  @Query(() => GetAllProductsResponse)
   async getAllProducts(
     @Info() info: GraphQLResolveInfo,
     @Arg("warehouseId") warehouseId: number,
     @Arg("categoryId", { nullable: true }) categoryId?: number,
     @Arg("limit", { nullable: true }) limit?: number,
     @Arg("page", { nullable: true }) page?: number,
-    @Arg("isDefault", { nullable: true }) isDefault?: boolean
-  ): Promise<Product[]> {
-    const take = limit ?? 20;
-    const skip = limit && page ? (page - 1) * limit : 0;
+    @Arg("isDefault", { nullable: true }) isDefault?: boolean,
+    @Arg("stockAvailable", { nullable: true }) stockAvailale?: boolean,
+    @Arg("attributeFilter", () => GraphQLJSONObject, { nullable: true })
+    attributeFilter?: Record<string, string>,
+    @Arg("minPrice", { nullable: true }) minPrice?: number,
+    @Arg("maxPrice", { nullable: true }) maxPrice?: number,
+    @Arg("sortBy", () => ProductSortEnum, { nullable: true })
+    sortBy?: ProductSortEnum
+  ): Promise<GetAllProductsResponse> {
+    try {
+      const take = limit ?? 20;
+      const currentPage = page ?? 1;
+      const skip = (currentPage - 1) * take;
 
-    const fields = graphqlFields(info);
-    const selectedProductFields = getSelectedFields(fields, "product");
+      const fields = graphqlFields(info);
+      const selectedProductFields = getSelectedFields({
+        fields: fields.data,
+        alias: "product",
+      });
 
-    const query = productRepository
-      .createQueryBuilder("product")
-      .take(take)
-      .skip(skip)
-      .select(Object.values(selectedProductFields));
+      // this is required for sorting product based on created AT (don't remove)
+      if (sortBy === ProductSortEnum.NEWEST) {
+        selectedProductFields["product_createdAt"] = "product.createdAt";
+      }
 
-    // we'll always apply warehouse filtering to get only those products which are available in warehouse (required for business logic)
-    query
-      .innerJoin("product.ProductVariant", "variant")
-      .innerJoin(
-        "variant.WarehouseStock",
-        "stock",
-        "stock.warehouseId = :warehouseId AND stock.stockQuantity > 0",
+      const query = productRepository
+        .createQueryBuilder("product")
+        .take(take)
+        .skip(skip)
+        .select(Object.values(selectedProductFields));
+
+      query
+        .innerJoin("product.ProductVariant", "variant")
+        .innerJoin(
+          "variant.WarehouseStock",
+          "stock",
+          "stock.warehouseId = :warehouseId",
+          { warehouseId }
+        );
+
+      if (stockAvailale) {
+        query.andWhere("stock.stockQuantity > 0");
+      }
+
+      if (categoryId) {
+        query
+          .innerJoin("product.categories", "relation")
+          .innerJoin("relation.category", "category")
+          .andWhere("category.id = :categoryId", { categoryId });
+      }
+
+      if (isDefault) {
+        query.andWhere("variant.isDefault = :isDefault", { isDefault });
+      }
+
+      if (attributeFilter && typeof attributeFilter === "object") {
+        const entries = Object.entries(attributeFilter).filter(
+          ([, v]) => v !== undefined
+        );
+
+        if (entries.length) {
+          const conditions: string[] = [];
+          const params: Record<string, any> = {};
+
+          entries.forEach(([key, value], index) => {
+            const keyParam = `attrKey_${index}`;
+            const valParam = `attrVal_${index}`;
+            conditions.push(
+              `variant_sub.attributes ->> :${keyParam} = :${valParam}`
+            );
+            params[keyParam] = key;
+            params[valParam] = value;
+          });
+
+          const whereClause = conditions.join(" AND ");
+
+          query.andWhere(
+            `EXISTS (
+            SELECT 1
+            FROM product_variant variant_sub
+            WHERE variant_sub."productId" = product.id
+            AND EXISTS (
+              SELECT 1 FROM warehouse_stock ws
+              WHERE ws."productVariantId" = variant_sub.id
+              AND ws."warehouseId" = :warehouseId
+            )
+            AND ${whereClause}
+          )`,
+            {
+              warehouseId,
+              ...params,
+            }
+          );
+        }
+      }
+
+      if (minPrice) {
+        query.andWhere(
+          `NOT EXISTS (
+          SELECT 1
+          FROM product_variant variant_sub
+          INNER JOIN warehouse_stock ws ON ws."productVariantId" = variant_sub.id
+          WHERE variant_sub."productId" = product.id
+          AND ws."warehouseId" = :warehouseId
+          AND CAST(variant_sub.price ->> 'amount' AS NUMERIC) < :minPrice
+        )`,
+          { warehouseId, minPrice }
+        );
+      }
+
+      if (maxPrice) {
+        query.andWhere(
+          `EXISTS (
+          SELECT 1
+          FROM product_variant variant_sub
+          INNER JOIN warehouse_stock ws ON ws."productVariantId" = variant_sub.id
+          WHERE variant_sub."productId" = product.id
+          AND ws."warehouseId" = :warehouseId
+          AND CAST(variant_sub.price ->> 'amount' AS NUMERIC) <= :maxPrice
+        )`,
+          { warehouseId, maxPrice }
+        );
+      }
+
+      if (
+        sortBy === ProductSortEnum.PRICE_LOW_TO_HIGH ||
+        sortBy === ProductSortEnum.PRICE_HIGH_TO_LOW
+      ) {
+        const sortDirection =
+          sortBy === ProductSortEnum.PRICE_LOW_TO_HIGH ? "ASC" : "DESC";
+
+        const subQuery = productRepository
+          .createQueryBuilder("product_sub")
+          .select("MIN(CAST(variant_sub.price ->> 'amount' AS NUMERIC))")
+          .from("product_variant", "variant_sub")
+          .innerJoin(
+            "warehouse_stock",
+            "ws_sub",
+            "ws_sub.productVariantId = variant_sub.id AND ws_sub.warehouseId = :warehouseId"
+          )
+          .where("variant_sub.productId = product.id")
+          .getQuery(); // this returns raw SQL string
+
+        query.addSelect(`(${subQuery})`, "min_price");
+        query.addOrderBy(`min_price`, sortDirection);
+      } else if (sortBy === ProductSortEnum.NEWEST) {
+        query.addOrderBy("product.createdAt", "DESC");
+      }
+
+      if (fields.data.ProductVariant || fields.data.variants) {
+        const variantFields = getSelectedFields({
+          fields: fields.data.ProductVariant || fields.data.variants,
+          alias: "variant",
+        });
+
+        if (Object.keys(variantFields).length) {
+          query.addSelect(Object.values(variantFields));
+        }
+
+        if (
+          fields.data.ProductVariant?.WarehouseStock ||
+          fields.data.ProductVariant?.warehouseStock
+        ) {
+          const stockFields = getSelectedFields({
+            fields:
+              fields.data.ProductVariant?.WarehouseStock ||
+              fields.data.ProductVariant?.warehouseStock,
+            alias: "stock",
+          });
+          query.addSelect(Object.values(stockFields));
+        }
+
+        if (
+          fields.data.ProductVariant?.ProductImage ||
+          fields.data.ProductVariant?.images
+        ) {
+          query.leftJoin("variant.ProductImage", "variantImage");
+          const imageFields = getSelectedFields({
+            fields:
+              fields.data.ProductVariant?.ProductImage ||
+              fields.data.ProductVariant?.images,
+            alias: "variantImage",
+          });
+          query.addSelect(Object.values(imageFields));
+        }
+      }
+
+      query.setParameters({ warehouseId });
+
+      const total = await query.getCount();
+      const totalPages = Math.ceil(total / take);
+      const hasMore = currentPage < totalPages;
+      const data: any = await query.getMany();
+
+      return {
+        data,
+        total,
+        currentPage,
+        totalPages,
+        hasMore,
+      };
+    } catch (error: any) {
+      return {
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
+    }
+  }
+
+  @Query(() => GetFeaturedProductsResponse)
+  async getFeaturedProducts(
+    @Info() info: GraphQLResolveInfo,
+    @Arg("productIds", () => [String]) productIds: string[],
+    @Arg("warehouseId") warehouseId: number,
+    @Arg("stockAvailable", { nullable: true }) stockAvailable?: boolean
+  ): Promise<GetFeaturedProductsResponse> {
+    try {
+      const fields = graphqlFields(info);
+      const selectedProductFields = getSelectedFields({
+        fields: fields.data,
+        alias: "product",
+      });
+
+      const query = productRepository
+        .createQueryBuilder("product")
+        .select(Object.values(selectedProductFields))
+        .where("product.id IN (:...productIds)", { productIds });
+
+      query
+        .innerJoin("product.ProductVariant", "variant")
+        .innerJoin(
+          "variant.WarehouseStock",
+          "stock",
+          "stock.warehouseId = :warehouseId",
+          { warehouseId }
+        );
+
+      if (stockAvailable) {
+        query.andWhere("stock.stockQuantity > 0");
+      }
+
+      query.andWhere(
+        `EXISTS (
+      SELECT 1
+      FROM product_variant variant_sub
+      INNER JOIN warehouse_stock ws_sub
+        ON ws_sub."productVariantId" = variant_sub.id
+      WHERE variant_sub."productId" = product.id
+      AND ws_sub."warehouseId" = :warehouseId
+    )`,
         { warehouseId }
       );
 
-    //  category filtering if requested
-    if (categoryId) {
-      query
-        .innerJoin("product.categories", "relation")
-        .innerJoin("relation.category", "category")
-        .andWhere("category.id = :categoryId", { categoryId });
-    }
-    // Add isDefault filtering if requested
-    if (isDefault !== undefined) {
-      query.andWhere("variant.isDefault = :isDefault", { isDefault });
-    }
+      if (fields.data.ProductVariant || fields.data.variants) {
+        const variantFields = getSelectedFields({
+          fields: fields.data.ProductVariant || fields.data.variants,
+          alias: "variant",
+        });
 
-    // ProductVariant fields if requested by client
-    if (fields.ProductVariant || fields.variants) {
-      const variantFields = getSelectedFields(
-        fields.ProductVariant || fields.variants,
-        "variant"
+        if (Object.keys(variantFields).length) {
+          query.addSelect(Object.values(variantFields));
+        }
+
+        if (
+          fields.data.ProductVariant?.WarehouseStock ||
+          fields.data.ProductVariant?.warehouseStock
+        ) {
+          const stockFields = getSelectedFields({
+            fields:
+              fields.data.ProductVariant?.WarehouseStock ||
+              fields.data.ProductVariant?.warehouseStock,
+            alias: "stock",
+          });
+          query.addSelect(Object.values(stockFields));
+        }
+
+        if (
+          fields.data.ProductVariant?.ProductImage ||
+          fields.data.ProductVariant?.images
+        ) {
+          query.leftJoin("variant.ProductImage", "variantImage");
+          const imageFields = getSelectedFields({
+            fields:
+              fields.data.ProductVariant?.ProductImage ||
+              fields.data.ProductVariant?.images,
+            alias: "variantImage",
+          });
+          query.addSelect(Object.values(imageFields));
+        }
+      }
+
+      const data: any = await query.getMany();
+      return {
+        data,
+      };
+    } catch (error: any) {
+      return {
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
+    }
+  }
+
+  @Query(() => GetProductBySlugResponse, { nullable: true })
+  async getProductBySlug(
+    @Info() info: GraphQLResolveInfo,
+    @Arg("slug") slug: string,
+    @Arg("warehouseId") warehouseId: number,
+    @Arg("stockAvailable", { nullable: true }) stockAvailable?: boolean
+  ): Promise<GetProductBySlugResponse> {
+    try {
+      const productExists = await productRepository.findOne({
+        where: { slug },
+      });
+      if (!productExists) {
+        return {
+          error: "Product not found.",
+        };
+      }
+
+      const fields = graphqlFields(info);
+      const selectedProductFields = getSelectedFields({
+        fields: fields.data,
+        alias: "product",
+      });
+
+      const query = productRepository
+        .createQueryBuilder("product")
+        .select(Object.values(selectedProductFields))
+        .where("product.slug = :slug", { slug });
+
+      query
+        .innerJoin("product.ProductVariant", "variant")
+        .innerJoin(
+          "variant.WarehouseStock",
+          "stock",
+          "stock.warehouseId = :warehouseId",
+          { warehouseId }
+        );
+
+      if (stockAvailable) {
+        query.andWhere("stock.stockQuantity > 0");
+      }
+
+      query.andWhere(
+        `EXISTS (
+      SELECT 1
+      FROM product_variant variant_sub
+      INNER JOIN warehouse_stock ws_sub
+        ON ws_sub."productVariantId" = variant_sub.id
+      WHERE variant_sub."productId" = product.id
+      AND ws_sub."warehouseId" = :warehouseId
+    )`,
+        { warehouseId }
       );
 
-      if (Object.keys(variantFields).length) {
-        query.addSelect(Object.values(variantFields));
-      }
+      if (fields.data.ProductVariant || fields.data.variants) {
+        const variantFields = getSelectedFields({
+          fields: fields.data.ProductVariant || fields.data.variants,
+          alias: "variant",
+        });
 
-      //  WarehouseStock fields if requested
-      if (
-        fields.ProductVariant?.WarehouseStock ||
-        fields.ProductVariant?.warehouseStock
-      ) {
-        const stockFields = getSelectedFields(
-          fields.ProductVariant?.WarehouseStock ||
-            fields.ProductVariant?.warehouseStock,
-          "stock"
-        );
-        query.addSelect(Object.values(stockFields));
-      }
+        if (Object.keys(variantFields).length) {
+          query.addSelect(Object.values(variantFields));
+        }
 
-      //  ProductImage fields if requested
-      if (
-        fields.ProductVariant?.ProductImage ||
-        fields.ProductVariant?.images
-      ) {
-        query.leftJoin("variant.ProductImage", "variantImage");
-        const imageFields = getSelectedFields(
-          fields.ProductVariant?.ProductImage || fields.ProductVariant?.images,
-          "variantImage"
-        );
-        query.addSelect(Object.values(imageFields));
+        if (
+          fields.data.ProductVariant?.WarehouseStock ||
+          fields.data.ProductVariant?.warehouseStock
+        ) {
+          const stockFields = getSelectedFields({
+            fields:
+              fields.data.ProductVariant?.WarehouseStock ||
+              fields.data.ProductVariant?.warehouseStock,
+            alias: "stock",
+          });
+          query.addSelect(Object.values(stockFields));
+        }
+        if (
+          fields.data.ProductVariant?.ProductImage ||
+          fields.data.ProductVariant?.images
+        ) {
+          query.leftJoin("variant.ProductImage", "variantImage");
+          const imageFields = getSelectedFields({
+            fields:
+              fields.data.ProductVariant?.ProductImage ||
+              fields.data.ProductVariant?.images,
+            alias: "variantImage",
+          });
+          query.addSelect(Object.values(imageFields));
+        }
       }
+      const data: any = await query.getOne();
+      return {
+        data: data,
+      };
+    } catch (error: any) {
+      return {
+        error:
+          error instanceof Error ? error.message : "Internal Server Error.",
+      };
     }
-
-    console.log("Generated SQL:", query.getSql());
-    return query.getMany();
   }
 }

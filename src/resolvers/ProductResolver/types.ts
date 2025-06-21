@@ -1,8 +1,8 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { Field, ID, ObjectType, registerEnumType } from "type-graphql";
 import { GraphQLJSON } from "graphql-type-json";
 
 @ObjectType()
-class ProductImagexx {
+class ProductImageResponse {
   @Field(() => ID)
   id: number;
 
@@ -23,7 +23,7 @@ class ProductImagexx {
 }
 
 @ObjectType()
-class WarehouseStockxx {
+class WarehouseStockResponse {
   @Field(() => ID)
   id: number;
 
@@ -31,10 +31,10 @@ class WarehouseStockxx {
   stockQuantity: number;
 
   @Field()
-  isActive: boolean;
+  reservedQuantity: string;
 
   @Field()
-  reservedQuantity: string;
+  allowBackorder: boolean;
 
   @Field(() => GraphQLJSON, { nullable: true })
   metaData: object;
@@ -47,7 +47,7 @@ class WarehouseStockxx {
 }
 
 @ObjectType()
-class ProductVariantxx {
+class ProductVariantResponse {
   @Field(() => ID)
   id: string;
 
@@ -57,47 +57,30 @@ class ProductVariantxx {
   @Field(() => GraphQLJSON, { nullable: true })
   tax: object;
 
-  @Field({ nullable: true })
-  description: string;
-
-  @Field({ nullable: true })
-  size: string;
-
-  @Field({ nullable: true })
-  height: string;
-
-  @Field({ nullable: true })
-  width: string;
-
-  @Field({ nullable: true })
-  length: string;
-
-  @Field({ nullable: true })
-  weight: string;
-
-  @Field({ nullable: true })
-  color: string;
+  @Field()
+  sku: string;
 
   @Field()
-  allowBackorder: boolean;
-
-  @Field(() => [ProductImagexx])
-  ProductImage: ProductVariantxx[];
-
-  @Field(() => [WarehouseStockxx])
-  WarehouseStock: WarehouseStockxx[];
+  isDefault: string;
 
   @Field(() => GraphQLJSON, { nullable: true })
-  metaData: object;
+  attributes: object;
 
   @Field()
   createdAt: Date;
 
   @Field()
   updatedAt: Date;
+
+  @Field(() => [ProductImageResponse])
+  ProductImage: ProductVariantResponse[];
+
+  @Field(() => [WarehouseStockResponse])
+  WarehouseStock: WarehouseStockResponse[];
 }
+
 @ObjectType()
-class Productxx {
+class ProductResponse {
   @Field(() => ID)
   id: string;
 
@@ -107,8 +90,14 @@ class Productxx {
   @Field()
   slug: string;
 
+  @Field()
+  description: string;
+
+  @Field()
+  thumbnail: string;
+
   @Field(() => GraphQLJSON, { nullable: true })
-  metaData: object;
+  attributes: object;
 
   // this may be added in future so in that case create an extra class for ProductCategoryRelation
   // @Field(() => [ProductCategoryRelation])
@@ -120,23 +109,53 @@ class Productxx {
   @Field()
   updatedAt: Date;
 
-  @Field(() => [ProductVariantxx])
-  ProductVariant: ProductVariantxx[];
+  @Field(() => [ProductVariantResponse])
+  ProductVariant: ProductVariantResponse[];
 }
 
+export enum ProductSortEnum {
+  PRICE_LOW_TO_HIGH = "price_low_to_high",
+  PRICE_HIGH_TO_LOW = "price_high_to_low",
+  NEWEST = "newest",
+}
+registerEnumType(ProductSortEnum, {
+  name: "ProductSortEnum",
+});
+
 @ObjectType()
-export class getSingleProductResponse {
-  @Field(() => Productxx, { nullable: true })
-  product?: Productxx;
+export class GetAllProductsResponse {
+  @Field(() => [ProductResponse])
+  data?: ProductResponse[];
+
+  @Field()
+  total?: number;
+
+  @Field()
+  currentPage?: number;
+
+  @Field()
+  totalPages?: number;
+
+  @Field()
+  hasMore?: boolean;
 
   @Field({ nullable: true })
   error?: string;
 }
 
 @ObjectType()
-export class GetAllProductsForCategoryResponse {
-  @Field(() => [Productxx], { nullable: true })
-  products?: Productxx[];
+export class GetFeaturedProductsResponse {
+  @Field(() => [ProductResponse])
+  data?: ProductResponse[];
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+@ObjectType()
+export class GetProductBySlugResponse {
+  @Field({ nullable: true })
+  data?: ProductResponse;
 
   @Field({ nullable: true })
   error?: string;

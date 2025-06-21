@@ -29,26 +29,18 @@ export const addNewProductCategory = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const {
-    name,
-    slug,
-    description,
-    isActive,
-    metaData,
-
-    user,
-    parentCategoryId,
-  } = await validateDTO(AddNewProductCategoryDTO, req.body);
+  const { name, slug, description, metaData, user, parentCategoryId } =
+    await validateDTO(AddNewProductCategoryDTO, req.body);
   await validateAdminUser(user.userId, PermissionEnum.manage_products);
 
   const existingCategory = await productCategoryRepository.findOne({
-    where: { name },
+    where: [{ name }, { slug }],
   });
 
   if (existingCategory) {
     res.status(409).json({
       status: "failed",
-      message: "Category name already exists.",
+      message: "Category with same name or slug already exists.",
     });
     return;
   }
@@ -71,7 +63,6 @@ export const addNewProductCategory = async (
     name,
     slug,
     description,
-    isActive,
     metaData: metaData,
     parentCategoryId: parentCategoryId || undefined,
   });

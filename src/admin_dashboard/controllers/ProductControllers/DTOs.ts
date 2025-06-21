@@ -76,10 +76,6 @@ export class AddNewProductCategoryDTO {
   description: string;
 
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
-
-  @IsOptional()
   @IsNumber()
   parentCategoryId?: number;
 
