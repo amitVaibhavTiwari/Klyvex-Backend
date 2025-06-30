@@ -42,23 +42,22 @@ const startGraphQlServer = async () => {
     const app = express();
 
     app.use(cookieParser());
-    // app.use(CsrfMiddleware); //  for security against csrf attacks [it works only in production environment.].
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use("/api/v1/admin", adminRouter); // this is seperate admin router for admin dashboard. Any other middleware or routes related to admin dashboard are added inside this router. (middlewares that are added below this line, will not be applied to this router. These below middlewares are for graphql server only.)
 
     app.use(
       cors({
         origin: process.env.ALLOWED_ORIGIN,
         // origin: function (origin, callback) {
-        //   callback(null, true); // allow all origins
+        //   callback(null, true);
         // },
+        // if u wanna allow all origins, uncomment this line and comment the above line.
         methods: ["GET", "POST", "PUT", "DELETE"],
-        allowedHeaders: ["Content-Type", "Authorization"],
+        allowedHeaders: ["Content-Type", "Authorization","x-csrf-token"],
         credentials: true,
       })
     );
-
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use("/api/v1/admin", adminRouter);
     app.use(
       "/graphql",
       // express.json(),

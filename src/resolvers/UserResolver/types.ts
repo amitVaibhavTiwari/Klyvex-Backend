@@ -43,11 +43,10 @@ export class GetUserDetailsResponse {
   error?: string;
 }
 @ObjectType()
-export class GetUserDetailsViaCookieResponse {
-  @Field(() => AccountUser, { nullable: true })
-  user?: AccountUser;
+export class GetUserIdResponse {
+  @Field(() => String, { nullable: true })
+  userId?: string;
 
   @Field({ nullable: true })
   error?: string;
-
 }

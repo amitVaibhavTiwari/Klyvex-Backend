@@ -19,7 +19,7 @@ import { sendRegistrationOtpEmail } from "../../utils/email.js";
 import { validate } from "class-validator";
 import {
   GetUserDetailsResponse,
-  GetUserDetailsViaCookieResponse,
+  GetUserIdResponse,
   LoginUserResponse,
   LogoutUserResponse,
   UserRegisterResponse,
@@ -28,9 +28,12 @@ import {
 import { EntityManager } from "typeorm";
 import {
   generateAccessToken,
+  generateCSRFToken,
   generateRefreshToken,
+  generateSessionId,
 } from "../../utils/token.js";
 import { isAuthenticated } from "../../middlewares/AuthMiddleware.js";
+import { CSRFMiddleware } from "../../middlewares/CsrfMiddleware.js";
 
 if (!process?.env?.SAME_SITE_COOKIES) {
   throw new Error("SAME_SITE_COOKIES is not defined in .env");
@@ -56,6 +59,7 @@ export class AccountUserResolver {
       if (!user) {
         throw new Error("No User Found.");
       }
+
       return { user: user };
     } catch (error) {
       return {
@@ -65,20 +69,20 @@ export class AccountUserResolver {
     }
   }
 
-  @Query(() => GetUserDetailsViaCookieResponse, { nullable: true })
-  @UseMiddleware(isAuthenticated)
-  async getUserDetailsViaCookie(
-    @Ctx() ctx: any
-  ): Promise<GetUserDetailsViaCookieResponse> {
+  @Query(() => GetUserIdResponse, { nullable: true })
+  @UseMiddleware([isAuthenticated, CSRFMiddleware])
+  async getUserId(@Ctx() ctx: any): Promise<GetUserIdResponse> {
     try {
       const user = await accountUserRepository.findOne({
         where: { id: ctx.user.userID },
-        relations: ["UserEmail", "UserAddress", "UserPhone"],
+        select: { id: true },
       });
-      if (!user) {
+      if (!user?.id) {
         throw new Error("No User Found.");
       }
-      return { user: user };
+      console.log("new logs");
+
+      return { userId: user.id };
     } catch (error) {
       return {
         error:
@@ -261,9 +265,9 @@ export class AccountUserResolver {
 
       const hashedPassword = userEmail.password;
       const isPasswordMatch = await comparePasswords(password, hashedPassword);
-      if (!isPasswordMatch) {
-        throw new Error("Invalid Email or Password.");
-      }
+      // if (!isPasswordMatch) {
+      //   throw new Error("Invalid Email or Password.");
+      // }
 
       const accessToken = generateAccessToken({
         userId: userEmail.AccountUser.id,
@@ -284,6 +288,19 @@ export class AccountUserResolver {
         secure: secureCookie,
         sameSite: sameSite,
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      });
+
+      const newSessionId = generateSessionId();
+      ctx.res.cookie("sessionId", newSessionId, {
+        secure: secureCookie,
+        sameSite: sameSite,
+        httpOnly: true,
+      });
+      const token = generateCSRFToken(newSessionId);
+      ctx.res.cookie("csrfToken", token, {
+        secure: secureCookie,
+        sameSite: sameSite,
+        httpOnly: false,
       });
 
       return {

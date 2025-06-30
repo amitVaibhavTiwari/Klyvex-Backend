@@ -21,7 +21,7 @@ export const adminCSRFMiddleware = async (
     const csrfHeader = decodeURIComponent(
       String(req.headers["x-csrf-token"]).trim()
     );
-    const sessionId = req.cookies.sessionId;
+    const sessionId = req.cookies.session_id;
 
     if (!csrfHeader || !sessionId)
       throw new Error("CSRF or sessionId token missing");
@@ -46,7 +46,7 @@ export const adminCSRFMiddleware = async (
       console.log("CSRF token expired, regenerating CSRF token and session ID");
 
       const newSessionId = generateAdminSessionId();
-      res.cookie("sessionId", newSessionId, {
+      res.cookie("session_id", newSessionId, {
         secure: secureCookie,
         sameSite: sameSite,
         httpOnly: true,

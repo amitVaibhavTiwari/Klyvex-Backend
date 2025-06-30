@@ -134,19 +134,19 @@ export const loginStaff = async (
     secure: secureCookie,
     sameSite: sameSite,
   });
-  res.cookie("sessionId", sessionId, {
+  res.cookie("session_id", sessionId, {
     httpOnly: true,
     secure: secureCookie,
     sameSite: sameSite,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });
-  res.cookie("accessToken", accessToken, {
+  res.cookie("access_token", accessToken, {
     httpOnly: true,
     secure: secureCookie,
     sameSite: sameSite,
     maxAge: 1000 * 60 * 60,
   });
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
     secure: secureCookie,
     sameSite: sameSite,

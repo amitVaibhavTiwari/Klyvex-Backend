@@ -21,10 +21,8 @@ export const adminAuthMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  console.log("Admin Auth Middleware Invoked");
-
-  const accessToken = req?.cookies?.accessToken;
-  const refreshToken = req?.cookies?.refreshToken;
+  const accessToken = req?.cookies?.access_token;
+  const refreshToken = req?.cookies?.refresh_token;
 
   try {
     if (accessToken) {
@@ -51,7 +49,7 @@ export const adminAuthMiddleware = async (
       // (this thing will help in future for blocking the refresh token for some user.)
       if (user.tokenId !== decodedRefresh.tokenId) {
         console.warn(
-          "Invalid or expired refresh token.",
+          "Invalid or expired refresh tokenId used.",
           decodedRefresh.tokenId
         );
         res.status(401).json({ status: "failed", message: "Unauthorized" });
@@ -60,7 +58,7 @@ export const adminAuthMiddleware = async (
       console.log("Valid refresh token, generating new access token...");
 
       const newAccessToken = generateAdminAccessToken({ userId: user.id });
-      res.cookie("accessToken", newAccessToken, {
+      res.cookie("access_token", newAccessToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: sameSite,
