@@ -36,15 +36,13 @@ export const CSRFMiddleware: MiddlewareFn<{
 
     if (receivedHmac !== expectedHmac) {
       console.log("Invalid CSRF token recieved", {
-        user: context?.user?.id,
+        user: context?.user?.userId,
       });
       throw new Error("Invalid CSRF token");
     }
 
     //now checking if token is expired or not
     if (Date.now() - parseInt(receivedTimestamp) > expiryTime) {
-      console.log("CSRF token expired, regenerating CSRF token and session ID");
-
       const newSessionId = generateSessionId();
       res.cookie("sessionId", newSessionId, {
         secure: secureCookie,
@@ -59,7 +57,7 @@ export const CSRFMiddleware: MiddlewareFn<{
       });
       return next();
     } else {
-      console.log("CSRF token is valid, proceeding with request");
+      // CSRF token is valid and not expired
       return next();
     }
   } catch (error: any) {

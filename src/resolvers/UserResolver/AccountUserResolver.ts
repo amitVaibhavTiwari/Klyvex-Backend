@@ -72,16 +72,18 @@ export class AccountUserResolver {
   @Query(() => GetUserIdResponse, { nullable: true })
   @UseMiddleware([isAuthenticated, CSRFMiddleware])
   async getUserId(@Ctx() ctx: any): Promise<GetUserIdResponse> {
+    if (!ctx?.user?.userId) {
+      return { error: "Unauthorized access to getUserId resolver." };
+    }
     try {
       const user = await accountUserRepository.findOne({
-        where: { id: ctx.user.userID },
+        where: { id: ctx.user.userId },
         select: { id: true },
       });
+
       if (!user?.id) {
         throw new Error("No User Found.");
       }
-      console.log("new logs");
-
       return { userId: user.id };
     } catch (error) {
       return {
@@ -130,13 +132,13 @@ export class AccountUserResolver {
         async (transactionalEntityManager: EntityManager) => {
           await transactionalEntityManager.save(user);
 
-          userEmail.AccountUser = user; // Link UserEmail to User
+          userEmail.AccountUser = user;
 
           await transactionalEntityManager.save(userEmail);
         }
       );
 
-      const OTP = generateOTP(8);
+      const OTP = generateOTP(6);
       const sendOtp = await sendRegistrationOtpEmail(OTP, email);
       if (sendOtp?.sent == true) {
         userEmail.lastOtpSent = OTP;
@@ -220,6 +222,19 @@ export class AccountUserResolver {
             maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
           });
 
+          const newSessionId = generateSessionId();
+          ctx.res.cookie("sessionId", newSessionId, {
+            secure: secureCookie,
+            sameSite: sameSite,
+            httpOnly: true,
+          });
+          const token = generateCSRFToken(newSessionId);
+          ctx.res.cookie("csrfToken", token, {
+            secure: secureCookie,
+            sameSite: sameSite,
+            httpOnly: false,
+          });
+
           return {
             otpVerified: true,
           };
@@ -265,10 +280,9 @@ export class AccountUserResolver {
 
       const hashedPassword = userEmail.password;
       const isPasswordMatch = await comparePasswords(password, hashedPassword);
-      // if (!isPasswordMatch) {
-      //   throw new Error("Invalid Email or Password.");
-      // }
-
+      if (!isPasswordMatch) {
+        throw new Error("Invalid Email or Password.");
+      }
       const accessToken = generateAccessToken({
         userId: userEmail.AccountUser.id,
       });
@@ -321,6 +335,8 @@ export class AccountUserResolver {
     try {
       ctx.res.clearCookie("accessToken");
       ctx.res.clearCookie("refreshToken");
+      ctx.res.clearCookie("csrfToken");
+      ctx.res.clearCookie("sessionId");
       return {
         logoutSuccess: true,
       };

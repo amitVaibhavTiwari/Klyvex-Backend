@@ -33,14 +33,12 @@ export const isAuthenticated: MiddlewareFn<{
   const refreshToken = req?.cookies?.refreshToken;
   try {
     if (accessToken) {
-      console.log("has access token...");
       const decoded = jwt.verify(accessToken, ACCESS_SECRET);
       context.user = decoded;
       return next();
     }
 
     if (refreshToken) {
-      console.log("has refresh token...");
       const decodedRefresh: any = jwt.verify(refreshToken, REFRESH_SECRET);
       const user = await accountUserRepository.findOne({
         where: { id: decodedRefresh.userId },
@@ -59,8 +57,6 @@ export const isAuthenticated: MiddlewareFn<{
         );
         throw new Error("Invalid refresh tokenId.");
       }
-      console.log("Valid refresh token, generating new access token...");
-
       const newAccessToken = generateAccessToken({ userId: user.id });
       res.cookie("accessToken", newAccessToken, {
         httpOnly: true,

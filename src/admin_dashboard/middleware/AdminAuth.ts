@@ -55,8 +55,6 @@ export const adminAuthMiddleware = async (
         res.status(401).json({ status: "failed", message: "Unauthorized" });
         return;
       }
-      console.log("Valid refresh token, generating new access token...");
-
       const newAccessToken = generateAdminAccessToken({ userId: user.id });
       res.cookie("access_token", newAccessToken, {
         httpOnly: true,

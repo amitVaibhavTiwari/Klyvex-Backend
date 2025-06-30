@@ -43,8 +43,6 @@ export const adminCSRFMiddleware = async (
 
     //now checking if token is expired or not
     if (Date.now() - parseInt(receivedTimestamp) > expiryTime) {
-      console.log("CSRF token expired, regenerating CSRF token and session ID");
-
       const newSessionId = generateAdminSessionId();
       res.cookie("session_id", newSessionId, {
         secure: secureCookie,
@@ -59,7 +57,7 @@ export const adminCSRFMiddleware = async (
       });
       return next();
     } else {
-      console.log("CSRF token is valid, proceeding with request");
+      // CSRF token is valid and not expired
       return next();
     }
   } catch (err: any) {
