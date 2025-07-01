@@ -238,16 +238,12 @@ export class AccountUserResolver {
           return {
             otpVerified: true,
           };
+        } else {
+          throw new Error("Invalid OTP.");
         }
       } else {
         throw new Error("OTP not sent to this email.");
       }
-
-      //default resp
-      return {
-        otpVerified: false,
-        error: "Internal Server Error.",
-      };
     } catch (error) {
       return {
         otpVerified: false,

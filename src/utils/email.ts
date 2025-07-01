@@ -27,10 +27,7 @@ export const sendRegistrationOtpEmail = async (
   };
 
   try {
-    const t = await sgMail.send(msg);
-    console.log("Email sent successfully", t);
-
-    // console.log("Email sent successfully");
+    await sgMail.send(msg);
     return { sent: true };
   } catch (error: any) {
     console.log("Error sending email:", error);
